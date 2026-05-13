@@ -429,7 +429,8 @@
 <div id="toast" class="toast"></div>
 
 <script>
-const API_URL = window.EDU_CONFIG?.API_URL || '';
+const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycby8zaIbNuiBMgJCasc3HMSGxYvV9v07SaH4kYaHPJF62ti_MsghiKsdY0QEmG-S7_Cp/exec';
+const API_URL = window.EDU_CONFIG?.API_URL || DEFAULT_API_URL;
 let courses = [], curId = null;
 
 // Date
@@ -441,6 +442,7 @@ let courses = [], curId = null;
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const today = () => new Date().toISOString().split('T')[0];
+const isDateValue = v => /^\d{4}-\d{2}-\d{2}$/.test(String(v || ''));
 
 function pillClass(c) {
   const t = today(), f = +c['신청수']||0, cap = +c['정원']||30;
@@ -493,11 +495,12 @@ function card(c, i) {
 }
 
 function upcRow(c, i) {
-  const [,m,d] = c['날짜'].split('-');
+  const hasDate = isDateValue(c['날짜']);
+  const [,m,d] = hasDate ? c['날짜'].split('-') : ['', '', ''];
   const f=+c['신청수']||0, cap=+c['정원']||30, ok=canReg(c);
   return `
   <div class="upc-item" style="animation-delay:${i*0.055}s">
-    <div class="upc-date"><span class="upc-m">${MONTHS[+m-1]}</span><span class="upc-d">${d}</span></div>
+    <div class="upc-date"><span class="upc-m">${hasDate ? MONTHS[+m-1] : 'TBD'}</span><span class="upc-d">${hasDate ? d : '-'}</span></div>
     <div class="upc-info">
       <div class="upc-name">${c['교육명']}</div>
       <div class="upc-sub">${c['시작시간']} ~ ${c['종료시간']} · ${c['장소']} · ${f}/${cap}명</div>
@@ -514,7 +517,7 @@ async function load() {
     courses = data.data;
     const t = today();
     const todayC = courses.filter(c=>c['날짜']===t);
-    const upc    = courses.filter(c=>c['날짜']>t);
+    const upc    = courses.filter(c=>!isDateValue(c['날짜']) || c['날짜']>t);
 
     // Banner
     if(todayC.length) {

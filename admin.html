@@ -371,7 +371,8 @@
 </div>
 
 <script>
-const API_URL = window.EDU_CONFIG?.API_URL || '';
+const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycby8zaIbNuiBMgJCasc3HMSGxYvV9v07SaH4kYaHPJF62ti_MsghiKsdY0QEmG-S7_Cp/exec';
+const API_URL = window.EDU_CONFIG?.API_URL || DEFAULT_API_URL;
 let allCourses = [];
 let editingCourseId = null;
 let currentQRUrl = '';
