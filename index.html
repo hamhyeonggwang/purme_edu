@@ -533,7 +533,7 @@ function pastRow(c, i) {
 
 async function load() {
   try {
-    const res = await fetch(`${API_URL}?action=getCourses&includePast=1`);
+    const res = await fetch(`${API_URL}?action=getCourses&includePast=16`);
     const data = await res.json();
     if(!data.success) throw new Error();
     courses = data.data;
@@ -577,7 +577,7 @@ async function load() {
     // Past
     document.getElementById('pastCount').textContent = `총 ${past.length}개`;
     document.getElementById('pastList').innerHTML = past.length
-      ? past.slice(0,8).map((c,i)=>pastRow(c,i)).join('')
+      ? past.slice(0,16).map((c,i)=>pastRow(c,i)).join('')
       : `<div style="text-align:center;padding:30px;color:#94A3B8;font-size:0.83rem;">지난 교육이 없습니다</div>`;
 
   } catch {
