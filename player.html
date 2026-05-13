@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>강의실 | 재활치료센터 교육 플랫폼</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <script src="assets/js/config.js"></script>
+  <style>
+    :root {
+      --navy:#0B1F4B; --blue:#1A4FA8; --blue-b:#2563EB; --teal:#0891B2;
+      --green:#059669; --green-bg:#D1FAE5; --bg:#F0F4F8; --surface:#fff; --border:#E2E8F0;
+      --t1:#0F172A; --t2:#334155; --t3:#64748B; --sidebar-w:270px;
+      --player-bg:#0D1526;
+    }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Pretendard','Noto Sans KR',sans-serif; background:var(--player-bg); color:#fff; display:flex; min-height:100vh; -webkit-font-smoothing:antialiased; }
+
+    /* Sidebar */
+    .sidebar { width:var(--sidebar-w); background:var(--navy); display:flex; flex-direction:column; position:sticky; top:0; height:100vh; overflow:hidden; flex-shrink:0; }
+    .sb-glow { position:absolute;pointer-events:none;border-radius:50%; }
+    .sb-g1 { top:-100px;left:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(37,99,235,0.17) 0%,transparent 70%); }
+    .sb-g2 { bottom:0;right:-80px;width:230px;height:230px;background:radial-gradient(circle,rgba(8,145,178,0.13) 0%,transparent 70%); }
+    .sb-brand { padding:30px 24px 22px;border-bottom:1px solid rgba(255,255,255,0.07);position:relative;z-index:1; }
+    .sb-dots { display:flex;gap:5px;margin-bottom:14px; }
+    .sb-dot { width:9px;height:9px;border-radius:50%; }
+    .sb-name { font-family:'Noto Serif KR',serif;font-size:0.97rem;font-weight:700;color:#fff;line-height:1.55; }
+    .sb-sub { font-size:0.67rem;color:rgba(255,255,255,0.38);letter-spacing:0.09em;text-transform:uppercase;margin-top:5px; }
+    .sb-nav { padding:18px 14px;flex:1;overflow-y:auto;position:relative;z-index:1; }
+    .sb-sec { font-size:0.63rem;font-weight:700;color:rgba(255,255,255,0.28);letter-spacing:0.12em;text-transform:uppercase;padding:0 10px;margin:18px 0 6px; }
+    .sb-sec:first-child { margin-top:0; }
+    .sb-link { display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:9px;color:rgba(255,255,255,0.55);font-size:0.855rem;font-weight:500;cursor:pointer;transition:all 0.15s;text-decoration:none; }
+    .sb-link:hover { background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.9); }
+    .sb-link.active { background:rgba(37,99,235,0.28);color:#fff; }
+    .sb-icon { width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+    .sb-link.active .sb-icon { background:rgba(37,99,235,0.45); }
+    .sb-link:hover .sb-icon { background:rgba(255,255,255,0.07); }
+    .sb-bot { padding:16px 14px 26px;position:relative;z-index:1; }
+    .sb-sup { background:linear-gradient(135deg,rgba(20,41,122,0.9),rgba(8,100,145,0.8));border:1px solid rgba(255,255,255,0.1);border-radius:13px;padding:15px 16px; }
+    .sb-sl { font-size:0.67rem;color:rgba(255,255,255,0.5);font-weight:600;margin-bottom:3px; }
+    .sb-sn { font-size:1.2rem;font-weight:800;color:#fff;letter-spacing:-0.02em; }
+    .sb-sh { font-size:0.65rem;color:rgba(255,255,255,0.45);margin-top:7px;line-height:1.65; }
+
+    /* Main */
+    .main { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
+    .topbar { background:rgba(13,21,38,0.95); border-bottom:1px solid rgba(255,255,255,0.08); height:58px; padding:0 28px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+    .tb-crumb { display:flex;align-items:center;gap:7px;font-size:0.8rem;color:rgba(255,255,255,0.45); }
+    .tb-crumb .cur { color:#fff;font-weight:700; }
+    .tb-right { display:flex;align-items:center;gap:10px; }
+    .tb-btn { display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.75);border-radius:9px;padding:7px 14px;font-size:0.79rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s;text-decoration:none; }
+    .tb-btn:hover { background:rgba(255,255,255,0.14);color:#fff; }
+
+    .content { flex:1; overflow-y:auto; display:flex; flex-direction:column; }
+
+    /* Player area */
+    .player-top { padding:0; }
+    .video-wrap { width:100%; background:#000; position:relative; }
+    .video-wrap iframe, .video-wrap video { width:100%; aspect-ratio:16/9; display:block; border:none; }
+    .video-placeholder { width:100%; aspect-ratio:16/9; background:#050D1A; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; }
+
+    .player-body { padding:22px 28px 40px; }
+    .player-main { display:flex; gap:24px; align-items:flex-start; }
+    .player-left { flex:1; min-width:0; }
+    .player-right { width:280px; flex-shrink:0; }
+
+    /* Course title row */
+    .player-title-row { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px; }
+    .player-title { font-family:'Noto Serif KR',serif; font-size:1.2rem; font-weight:700; color:#fff; letter-spacing:-0.02em; line-height:1.35; }
+    .player-course { font-size:0.8rem; color:rgba(255,255,255,0.45); margin-top:4px; }
+
+    /* Progress bar */
+    .watch-progress { margin-bottom:16px; }
+    .wp-hd { display:flex;justify-content:space-between;margin-bottom:6px; }
+    .wp-l { font-size:0.72rem;color:rgba(255,255,255,0.4);font-weight:500; }
+    .wp-r { font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.7); }
+    .wp-track { height:3px;background:rgba(255,255,255,0.1);border-radius:999px;overflow:hidden; }
+    .wp-fill { height:100%;border-radius:999px;background:linear-gradient(90deg,#2563EB,#0891B2);transition:width 1s linear; }
+
+    /* Action buttons */
+    .action-row { display:flex;gap:10px;margin-bottom:18px; }
+    .a-btn {
+      flex:1;padding:13px 14px;border-radius:11px;border:none;
+      font-size:0.85rem;font-weight:700;font-family:inherit;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;gap:7px;transition:all 0.18s;
+    }
+    .a-btn.survey { background:linear-gradient(135deg,#059669,#0891B2);color:#fff; animation:surveyPulse 2.5s infinite; }
+    @keyframes surveyPulse { 0%,100%{box-shadow:0 0 0 0 rgba(5,150,105,0.4)} 50%{box-shadow:0 0 0 12px rgba(5,150,105,0)} }
+    .a-btn.survey:hover { transform:translateY(-1px);box-shadow:0 8px 24px rgba(5,150,105,0.35); }
+    .a-btn.pdf { background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.75);border:1px solid rgba(255,255,255,0.14); }
+    .a-btn.pdf:hover { background:rgba(255,255,255,0.14);color:#fff; }
+    .a-btn.pdf:disabled { opacity:0.35;cursor:not-allowed; }
+
+    /* Survey complete banner */
+    .survey-banner { background:linear-gradient(135deg,rgba(5,150,105,0.2),rgba(8,145,178,0.2)); border:1px solid rgba(5,150,105,0.3); border-radius:13px; padding:16px 18px; display:none; margin-bottom:16px; animation:slideIn 0.4s ease; }
+    @keyframes slideIn { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
+    .sb-hd { display:flex;align-items:center;gap:10px;margin-bottom:10px; }
+    .sb-icon2 { width:34px;height:34px;border-radius:9px;background:rgba(5,150,105,0.25);display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+    .sb-text p:first-child { font-size:0.88rem;font-weight:700;color:#fff; }
+    .sb-text p:last-child { font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:2px; }
+    .sb-full-btn { width:100%;padding:11px;border-radius:10px;background:rgba(5,150,105,0.35);border:1px solid rgba(5,150,105,0.4);color:#fff;font-size:0.85rem;font-weight:700;font-family:inherit;cursor:pointer;transition:all 0.15s; }
+    .sb-full-btn:hover { background:rgba(5,150,105,0.55); }
+
+    /* Playlist */
+    .pl-label { font-size:0.65rem;font-weight:700;color:rgba(255,255,255,0.3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px; }
+    .pl-item { padding:11px 13px;border-radius:10px;cursor:pointer;transition:all 0.14s;border:1px solid transparent;display:flex;align-items:center;gap:10px; }
+    .pl-item:hover { background:rgba(255,255,255,0.06); }
+    .pl-item.active { background:rgba(37,99,235,0.22);border-color:rgba(37,99,235,0.35); }
+    .pl-num { width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0; }
+    .pl-item.active .pl-num { background:#2563EB;color:#fff; }
+    .pl-item:not(.active) .pl-num { background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5); }
+    .pl-name { font-size:0.82rem;color:rgba(255,255,255,0.65);line-height:1.35; }
+    .pl-item.active .pl-name { color:#fff; }
+
+    @media(max-width:900px){ .player-right{display:none;} .player-left{flex:1;} }
+    @media(max-width:660px){ .sidebar{display:none;} .topbar{padding:0 16px;} .player-body{padding:16px 18px 32px;} .action-row{flex-direction:column;} }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sb-glow sb-g1"></div><div class="sb-glow sb-g2"></div>
+  <div class="sb-brand">
+    <div class="sb-dots">
+      <div class="sb-dot" style="background:#4ADE80"></div><div class="sb-dot" style="background:#FB923C"></div>
+      <div class="sb-dot" style="background:#FACC15"></div><div class="sb-dot" style="background:#60A5FA"></div>
+    </div>
+    <div class="sb-name">푸르메재단<br>넥슨어린이재활병원</div>
+    <div class="sb-sub">Rehabilitation Center · Education</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-sec">교육 센터</div>
+    <a class="sb-link" href="index.html"><div class="sb-icon"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>교육 목록</a>
+    <a class="sb-link active" href="#"><div class="sb-icon"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>나의 강의실</a>
+    <a class="sb-link" href="attendance.html"><div class="sb-icon"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>QR 출석</a>
+    <div class="sb-sec">학습 지원</div>
+    <a class="sb-link" href="#"><div class="sb-icon"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>학습지원센터</a>
+  </nav>
+  <div class="sb-bot">
+    <div class="sb-sup">
+      <div class="sb-sl">교육 담당자 연락처</div><div class="sb-sn">내선 9095</div>
+      <div class="sb-sh">평일 09:00 ~ 18:00<br>점심 12:00 ~ 13:00<br><strong style="color:rgba(255,255,255,0.75)">주말·공휴일 휴무</strong></div>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="tb-crumb">
+      <span>교육 센터</span>
+      <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      <span class="cur">나의 강의실</span>
+    </div>
+    <div class="tb-right">
+      <button onclick="toggleFs()" class="tb-btn" title="전체화면">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+        전체화면
+      </button>
+      <a href="index.html" class="tb-btn">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        목록으로
+      </a>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="player-top">
+      <div class="video-wrap" id="videoWrap">
+        <div class="video-placeholder">
+          <svg width="48" height="48" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <p style="font-size:0.85rem;color:rgba(255,255,255,0.3)">교육 영상을 불러오는 중...</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="player-body">
+      <div class="player-main">
+        <div class="player-left">
+          <div class="player-title-row">
+            <div>
+              <h2 class="player-title" id="vidTitle">교육 영상</h2>
+              <p class="player-course" id="courseLabel"></p>
+            </div>
+          </div>
+          <div class="watch-progress">
+            <div class="wp-hd"><span class="wp-l">시청 진행률</span><span class="wp-r" id="wpPct">0%</span></div>
+            <div class="wp-track"><div class="wp-fill" id="wpFill" style="width:0%"></div></div>
+          </div>
+          <div id="surveyBanner" class="survey-banner">
+            <div class="sb-hd">
+              <div class="sb-icon2"><svg width="16" height="16" fill="none" stroke="#4ADE80" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+              <div class="sb-text"><p>영상 시청이 완료되었습니다!</p><p>설문에 참여하면 수료 처리됩니다</p></div>
+            </div>
+            <button onclick="goSurvey()" class="sb-full-btn">📋 설문 참여하기</button>
+          </div>
+          <div class="action-row">
+            <button onclick="goSurvey()" class="a-btn survey">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              설문 참여 (수료 필수)
+            </button>
+            <button onclick="openPdf()" id="pdfBtn" class="a-btn pdf" disabled>
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              교육자료 PDF
+            </button>
+          </div>
+          <p style="font-size:0.72rem;color:rgba(255,255,255,0.28);line-height:1.6;">출석 확인 후 영상을 시청하고, 설문에 참여하면 자동으로 수료 처리됩니다.</p>
+        </div>
+
+        <!-- Playlist (desktop) -->
+        <div class="player-right">
+          <div class="pl-label">재생목록</div>
+          <div id="playlist"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_URL = window.EDU_CONFIG?.API_URL || '';
+const courseId = new URLSearchParams(location.search).get('id');
+let videoList = [], curIdx = 0, surveyUrl = '', materialUrl = '';
+let watchSec = 0, watchTimer = null, duration = 600;
+
+async function load() {
+  if (!courseId) {
+    showVideoError('교육 ID가 없습니다.');
+    return;
+  }
+
+  try {
+    const r = await fetch(`${API_URL}?action=getCourseById&courseId=${encodeURIComponent(courseId)}`);
+    const d = await r.json();
+    if (!d.success) {
+      showVideoError(d.error || '교육 정보를 찾을 수 없습니다.');
+      return;
+    }
+    const c = d.data;
+    document.getElementById('courseLabel').textContent = c['교육명'];
+    surveyUrl = c['설문URL'] || '';
+    materialUrl = c['자료URL'] || '';
+    if (materialUrl) { document.getElementById('pdfBtn').disabled = false; }
+
+    const urls = (c['영상URL'] || '').split(',').map(u=>u.trim()).filter(Boolean);
+    videoList = urls.length ? urls.map((u,i)=>({title:urls.length>1?`${c['교육명']} (${i+1}/${urls.length})`:c['교육명'],url:u})) : [{title:c['교육명'],url:''}];
+    renderPlaylist(); play(0);
+  } catch (err) {
+    showVideoError('교육 정보를 불러오지 못했습니다.');
+  }
+}
+
+function play(i) {
+  curIdx = i; const item = videoList[i];
+  document.getElementById('vidTitle').textContent = item.title;
+  const wrap = document.getElementById('videoWrap');
+  const url = item.url;
+
+  if (!url) {
+    wrap.innerHTML = `<div class="video-placeholder"><svg width="48" height="48" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg><p style="font-size:0.82rem;color:rgba(255,255,255,0.3)">영상 URL이 아직 등록되지 않았습니다</p></div>`;
+    return;
+  }
+  if (url.includes('youtube') || url.includes('youtu.be')) {
+    const id = getYouTubeId(url);
+    if (!id) {
+      showVideoError('YouTube 영상 주소를 확인해 주세요.');
+      return;
+    }
+    const origin = encodeURIComponent(window.location.origin);
+    wrap.innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?rel=0&modestbranding=1&origin=${origin}" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe>`;
+    startTimer(600);
+  } else if (url.includes('drive.google.com')) {
+    const fid = getDriveId(url);
+    if (!fid) {
+      showVideoError('Google Drive 영상 주소를 확인해 주세요.');
+      return;
+    }
+    wrap.innerHTML = `<iframe src="https://drive.google.com/file/d/${fid}/preview" allowfullscreen></iframe>`;
+    startTimer(600);
+  } else if (url.includes('vimeo.com')) {
+    const id = getVimeoId(url);
+    if (!id) {
+      showVideoError('Vimeo 영상 주소를 확인해 주세요.');
+      return;
+    }
+    wrap.innerHTML = `<iframe src="https://player.vimeo.com/video/${id}?title=0&byline=0&portrait=0" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+    startTimer(600);
+  } else {
+    wrap.innerHTML = `<video controls onended="onEnd()" ontimeupdate="onTime(this)" style="width:100%;aspect-ratio:16/9;"><source src="${url}" type="video/mp4"></video>`;
+  }
+  renderPlaylist();
+}
+
+function getYouTubeId(url) {
+  return url.match(/(?:youtube\.com\/(?:watch\?.*v=|embed\/|shorts\/)|youtu\.be\/)([^"&?\/\s]{11})/)?.[1] || '';
+}
+
+function getVimeoId(url) {
+  return url.match(/vimeo\.com\/(?:video\/)?(\d+)/)?.[1] || '';
+}
+
+function getDriveId(url) {
+  return url.match(/\/d\/([a-zA-Z0-9_-]+)/)?.[1] || url.match(/[?&]id=([a-zA-Z0-9_-]+)/)?.[1] || '';
+}
+
+function showVideoError(message) {
+  document.getElementById('videoWrap').innerHTML = `<div class="video-placeholder"><svg width="48" height="48" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="7" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><p style="font-size:0.86rem;color:rgba(255,255,255,0.7);font-weight:700;">${message}</p><p style="font-size:0.76rem;color:rgba(255,255,255,0.35);">영상 링크 또는 공개 설정을 확인해 주세요.</p></div>`;
+}
+
+function startTimer(dur) {
+  clearInterval(watchTimer); watchSec = 0; duration = dur;
+  watchTimer = setInterval(() => {
+    watchSec++;
+    const pct = Math.min(100, Math.round(watchSec/duration*100));
+    setProgress(pct);
+    if (watchSec >= duration*0.9) { onEnd(); clearInterval(watchTimer); }
+  }, 1000);
+}
+function onTime(v) { if(v.duration) setProgress(Math.round(v.currentTime/v.duration*100)); }
+function setProgress(pct) {
+  document.getElementById('wpFill').style.width = pct+'%';
+  document.getElementById('wpPct').textContent = pct+'%';
+}
+function onEnd() {
+  clearInterval(watchTimer); setProgress(100);
+  if (curIdx < videoList.length-1) setTimeout(()=>play(curIdx+1), 1800);
+  else { document.getElementById('surveyBanner').style.display = 'block'; }
+}
+
+function renderPlaylist() {
+  const html = videoList.map((v,i)=>`
+    <div class="pl-item ${i===curIdx?'active':''}" onclick="play(${i})">
+      <div class="pl-num">${i===curIdx?'▶':i+1}</div>
+      <div class="pl-name">${v.title}</div>
+    </div>`).join('');
+  document.getElementById('playlist').innerHTML = html || '<p style="font-size:0.8rem;color:rgba(255,255,255,0.3);">영상 없음</p>';
+}
+
+function goSurvey() { if(surveyUrl) window.open(surveyUrl,'_blank'); else alert('설문 URL이 등록되지 않았습니다.'); }
+function openPdf() { if(materialUrl) window.open(materialUrl,'_blank'); }
+function toggleFs() { const w=document.getElementById('videoWrap'); if(!document.fullscreenElement) w.requestFullscreen?.(); else document.exitFullscreen?.(); }
+
+load();
+</script>
+</body>
+</html>

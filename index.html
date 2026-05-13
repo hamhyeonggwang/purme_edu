@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>재활치료센터 교육 플랫폼 | 푸르메재단 넥슨어린이재활병원</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <script src="assets/js/config.js"></script>
+  <style>
+    :root {
+      --navy:       #0B1F4B;
+      --navy-mid:   #14297A;
+      --blue:       #1A4FA8;
+      --blue-b:     #2563EB;
+      --teal:       #0891B2;
+      --accent-bg:  #EFF6FF;
+      --green:      #059669;
+      --green-bg:   #D1FAE5;
+      --orange:     #D97706;
+      --orange-bg:  #FEF3C7;
+      --red:        #DC2626;
+      --red-bg:     #FEE2E2;
+      --bg:         #F0F4F8;
+      --surface:    #FFFFFF;
+      --border:     #E2E8F0;
+      --t1: #0F172A; --t2: #334155; --t3: #64748B; --t4: #94A3B8;
+      --sidebar-w: 270px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      color: var(--t1);
+      display: flex;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ───────── SIDEBAR ───────── */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: var(--navy);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .sb-glow {
+      position: absolute; pointer-events: none;
+      border-radius: 50%;
+    }
+    .sb-glow-1 { top: -100px; left: -80px; width: 320px; height: 320px; background: radial-gradient(circle, rgba(37,99,235,0.18) 0%, transparent 70%); }
+    .sb-glow-2 { bottom: 0; right: -80px; width: 240px; height: 240px; background: radial-gradient(circle, rgba(8,145,178,0.14) 0%, transparent 70%); }
+
+    .sb-brand { padding: 30px 24px 22px; border-bottom: 1px solid rgba(255,255,255,0.07); position: relative; z-index:1; }
+    .sb-dots { display: flex; gap: 5px; margin-bottom: 14px; }
+    .sb-dot { width: 9px; height: 9px; border-radius: 50%; }
+    .sb-name {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 0.97rem; font-weight: 700; color: #fff; line-height: 1.55;
+    }
+    .sb-sub { font-size: 0.67rem; color: rgba(255,255,255,0.38); letter-spacing: 0.09em; text-transform: uppercase; margin-top: 5px; }
+
+    .sb-nav { padding: 18px 14px; flex: 1; overflow-y: auto; position: relative; z-index:1; }
+    .sb-sec { font-size: 0.63rem; font-weight: 700; color: rgba(255,255,255,0.28); letter-spacing: 0.12em; text-transform: uppercase; padding: 0 10px; margin: 18px 0 6px; }
+    .sb-sec:first-child { margin-top: 0; }
+    .sb-link {
+      display: flex; align-items: center; gap: 11px;
+      padding: 10px 12px; border-radius: 9px;
+      color: rgba(255,255,255,0.55); font-size: 0.855rem; font-weight: 500;
+      cursor: pointer; transition: all 0.15s; text-decoration: none;
+    }
+    .sb-link:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.9); }
+    .sb-link.active { background: rgba(37,99,235,0.28); color: #fff; }
+    .sb-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .sb-link.active .sb-icon { background: rgba(37,99,235,0.45); }
+    .sb-link:hover .sb-icon { background: rgba(255,255,255,0.07); }
+
+    .sb-notice { margin: 0 14px; position: relative; z-index:1; }
+    .sb-notice-inner { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 13px 15px; }
+    .sb-notice-hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 9px; }
+    .sb-notice-title { font-size: 0.75rem; font-weight: 700; color: rgba(255,255,255,0.75); }
+    .sb-notice-item { font-size: 0.69rem; color: rgba(255,255,255,0.4); line-height: 1.55; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+    .sb-notice-item:hover { color: rgba(255,255,255,0.7); }
+    .sb-notice-item:last-child { border-bottom: none; }
+
+    .sb-bottom { padding: 16px 14px 26px; position: relative; z-index:1; }
+    .sb-support {
+      background: linear-gradient(135deg, rgba(20,41,122,0.9), rgba(8,100,145,0.8));
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 13px; padding: 15px 16px;
+    }
+    .sb-sup-label { font-size: 0.67rem; color: rgba(255,255,255,0.5); font-weight: 600; margin-bottom: 3px; }
+    .sb-sup-num { font-size: 1.2rem; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+    .sb-sup-hours { font-size: 0.65rem; color: rgba(255,255,255,0.45); margin-top: 7px; line-height: 1.65; }
+
+    /* ───────── MAIN ───────── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+    .topbar {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      height: 58px; padding: 0 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .tb-crumb { display: flex; align-items: center; gap: 7px; font-size: 0.8rem; color: var(--t3); }
+    .tb-crumb .cur { color: var(--t1); font-weight: 700; }
+    .tb-right { display: flex; align-items: center; gap: 10px; }
+    .tb-date { font-size: 0.78rem; color: var(--t3); background: var(--bg); border-radius: 8px; padding: 5px 13px; }
+    .tb-admin {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--navy); color: #fff;
+      border: none; border-radius: 9px; padding: 7px 15px;
+      font-size: 0.79rem; font-weight: 700; cursor: pointer;
+      font-family: inherit; text-decoration: none; transition: background 0.15s;
+    }
+    .tb-admin:hover { background: var(--navy-mid); }
+
+    .content { flex: 1; overflow-y: auto; padding: 28px 32px 56px; }
+
+    /* Today banner */
+    .today-banner {
+      background: linear-gradient(125deg, #0B1F4B 0%, #163585 55%, #0E7490 100%);
+      border-radius: 16px; padding: 22px 28px; margin-bottom: 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: relative; overflow: hidden;
+    }
+    .today-banner-bg {
+      position: absolute; right: -60px; top: -60px; width: 220px; height: 220px;
+      border-radius: 50%; background: rgba(255,255,255,0.04); pointer-events: none;
+    }
+    .tb-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 999px; padding: 3px 11px;
+      font-size: 0.67rem; font-weight: 800; color: #fff;
+      letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 9px;
+    }
+    .tb-title {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 1.3rem; font-weight: 700; color: #fff;
+      line-height: 1.3; letter-spacing: -0.02em;
+    }
+    .tb-metas { display: flex; gap: 14px; margin-top: 9px; }
+    .tb-meta { display: flex; align-items: center; gap: 5px; font-size: 0.78rem; color: rgba(255,255,255,0.65); }
+    .tb-right-col { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; flex-shrink: 0; position: relative; z-index: 1; }
+    .tb-count { background: rgba(255,255,255,0.11); border: 1px solid rgba(255,255,255,0.18); border-radius: 11px; padding: 9px 18px; text-align: center; }
+    .tb-count-n { font-size: 1.55rem; font-weight: 800; color: #fff; line-height: 1; }
+    .tb-count-l { font-size: 0.64rem; color: rgba(255,255,255,0.55); margin-top: 2px; }
+    .tb-down-btn {
+      background: #fff; color: var(--navy);
+      border: none; border-radius: 9px; padding: 9px 18px;
+      font-size: 0.82rem; font-weight: 700; cursor: pointer; font-family: inherit;
+      display: flex; align-items: center; gap: 5px; transition: all 0.15s;
+    }
+    .tb-down-btn:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.14); transform: translateY(-1px); }
+
+    /* Section header */
+    .sec-hd { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 16px; }
+    .sec-title { font-family: 'Noto Serif KR', serif; font-size: 1.15rem; font-weight: 700; color: var(--t1); letter-spacing: -0.02em; }
+    .sec-title em { font-style: normal; color: var(--blue-b); }
+    .sec-meta { font-size: 0.79rem; color: var(--t3); }
+
+    /* Course grid */
+    .course-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 14px; margin-bottom: 44px; }
+
+    .c-card { background: var(--surface); border: 1px solid var(--border); border-radius: 15px; overflow: hidden; transition: all 0.2s; animation: fadeUp 0.38s ease both; }
+    .c-card:hover { border-color: #93C5FD; box-shadow: 0 6px 28px rgba(26,79,168,0.09); transform: translateY(-2px); }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+    .c-stripe { height: 3px; }
+    .c-stripe.s-blue { background: linear-gradient(90deg, #1A4FA8, #0891B2); }
+    .c-stripe.s-gray { background: linear-gradient(90deg, #94A3B8, #CBD5E1); }
+    .c-stripe.s-orange { background: linear-gradient(90deg, #D97706, #F59E0B); }
+
+    .c-body { padding: 20px 22px; }
+    .c-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 13px; }
+    .c-title { font-family: 'Noto Serif KR', serif; font-size: 1rem; font-weight: 700; color: var(--t1); line-height: 1.38; flex: 1; letter-spacing: -0.02em; }
+
+    .s-pill { flex-shrink: 0; font-size: 0.68rem; font-weight: 800; padding: 3px 9px; border-radius: 999px; letter-spacing: 0.02em; }
+    .s-pill.open   { background: var(--green-bg);  color: var(--green); }
+    .s-pill.full   { background: var(--red-bg);    color: var(--red); }
+    .s-pill.today2 { background: var(--accent-bg); color: var(--blue-b); }
+    .s-pill.ended  { background: #F1F5F9;           color: var(--t3); }
+
+    .c-info { display: flex; flex-direction: column; gap: 6px; margin-bottom: 15px; }
+    .c-info-row { display: flex; align-items: flex-start; gap: 7px; font-size: 0.81rem; color: var(--t2); }
+    .c-info-row svg { flex-shrink: 0; color: #3B82F6; margin-top: 1px; }
+    .c-desc { font-size: 0.76rem; color: var(--t3); line-height: 1.45; }
+
+    .c-prog { margin-bottom: 15px; }
+    .c-prog-hd { display: flex; justify-content: space-between; margin-bottom: 5px; }
+    .c-prog-l { font-size: 0.73rem; color: var(--t3); font-weight: 500; }
+    .c-prog-r { font-size: 0.73rem; font-weight: 800; }
+    .c-prog-track { height: 4px; background: #F1F5F9; border-radius: 999px; overflow: hidden; }
+    .c-prog-fill { height: 100%; border-radius: 999px; transition: width 0.7s ease; }
+
+    .c-actions { display: flex; gap: 7px; }
+    .c-btn {
+      flex: 1; padding: 10px 10px; border-radius: 9px;
+      font-size: 0.8rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      cursor: pointer; border: none; font-family: inherit; text-decoration: none; transition: all 0.15s;
+    }
+    .c-btn.pr { background: var(--blue); color: #fff; }
+    .c-btn.pr:hover { background: var(--blue-b); }
+    .c-btn.pr:disabled { background: #CBD5E1; cursor: not-allowed; }
+    .c-btn.tl { background: var(--teal); color: #fff; }
+    .c-btn.tl:hover { background: #0E7490; }
+    .c-btn.sc { background: var(--bg); color: var(--t2); border: 1px solid var(--border); }
+    .c-btn.sc:hover { background: var(--accent-bg); color: var(--blue-b); border-color: #93C5FD; }
+
+    /* Upcoming list */
+    .upc-list { display: flex; flex-direction: column; gap: 9px; }
+    .upc-item {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 13px 18px; display: flex; align-items: center; gap: 14px; transition: all 0.15s;
+      animation: fadeUp 0.35s ease both;
+    }
+    .upc-item:hover { border-color: #93C5FD; background: #F8FBFF; }
+    .upc-date { width: 46px; height: 46px; border-radius: 10px; background: var(--accent-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; }
+    .upc-date .upc-m { font-size: 0.59rem; font-weight: 800; color: var(--blue-b); text-transform: uppercase; letter-spacing: 0.04em; }
+    .upc-date .upc-d { font-size: 1.05rem; font-weight: 900; color: var(--blue); line-height: 1.1; }
+    .upc-info { flex: 1; min-width: 0; }
+    .upc-name { font-size: 0.88rem; font-weight: 700; color: var(--t1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .upc-sub  { font-size: 0.73rem; color: var(--t3); margin-top: 3px; }
+    .upc-act button {
+      background: var(--blue); color: #fff; border: none; border-radius: 8px; padding: 7px 15px;
+      font-size: 0.77rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.15s; white-space: nowrap;
+    }
+    .upc-act button:hover { background: var(--blue-b); }
+    .upc-act button.dis { background: #E2E8F0; color: var(--t3); cursor: not-allowed; }
+
+    /* Empty */
+    .empty { background: var(--surface); border: 1px solid var(--border); border-radius: 15px; padding: 48px 24px; text-align: center; }
+    .empty-ico { width: 52px; height: 52px; background: var(--accent-bg); border-radius: 13px; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+
+    /* Skeleton */
+    .sk { background: linear-gradient(90deg,#EFF4F8 25%,#E2E8F0 50%,#EFF4F8 75%); background-size:200% 100%; animation:sk 1.5s infinite; border-radius:7px; }
+    @keyframes sk { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    /* Modal */
+    .modal-ov { position:fixed;inset:0;background:rgba(11,31,75,0.52);backdrop-filter:blur(5px);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px; }
+    .modal-box { background:#fff;border-radius:18px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;animation:mIn 0.28s cubic-bezier(0.16,1,0.3,1); }
+    @keyframes mIn { from{opacity:0;transform:scale(0.96) translateY(8px)} to{opacity:1;transform:scale(1) translateY(0)} }
+    .m-hd { padding:26px 26px 0; }
+    .m-bd { padding:18px 26px 0; }
+    .m-ft { padding:18px 26px 26px; display:flex; gap:9px; }
+    .m-title { font-family:'Noto Serif KR',serif; font-size:1.2rem; font-weight:700; letter-spacing:-0.02em; }
+    .m-sub { font-size:0.82rem; color:var(--t3); margin-top:3px; }
+    .m-close { background:none;border:none;cursor:pointer;padding:5px;border-radius:7px;transition:background 0.12s; }
+    .m-close:hover { background:#F1F5F9; }
+
+    .fg { margin-bottom:14px; }
+    .fl { display:block;font-size:0.78rem;font-weight:700;color:var(--t2);margin-bottom:6px; }
+    .fi { width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:9px;font-size:0.88rem;font-family:inherit;outline:none;transition:border-color 0.15s;color:var(--t1); }
+    .fi:focus { border-color:var(--blue); }
+    select.fi { appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' fill='%2364748B' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:36px; }
+    .fm { padding:9px 13px;border-radius:8px;font-size:0.8rem;margin-top:10px;display:none; }
+    .fm.err { background:var(--red-bg);color:var(--red); }
+    .fm.suc { background:var(--green-bg);color:var(--green); }
+
+    .m-btn { flex:1;padding:12px;border-radius:10px;font-size:0.88rem;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:all 0.15s; }
+    .m-btn.pr { background:var(--blue);color:#fff; }
+    .m-btn.pr:hover { background:var(--blue-b); }
+    .m-btn.pr:disabled { background:#CBD5E1;cursor:not-allowed; }
+    .m-btn.gh { background:var(--bg);color:var(--t2);border:1.5px solid var(--border); }
+    .m-btn.gh:hover { background:#E2E8F0; }
+
+    /* Toast */
+    .toast { position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:11px 20px;border-radius:11px;font-size:0.83rem;font-weight:600;box-shadow:0 8px 28px rgba(11,31,75,0.22);z-index:200;display:none; }
+
+    /* Responsive */
+    @media(max-width:920px){ :root{--sidebar-w:240px;} .course-grid{grid-template-columns:1fr;} }
+    @media(max-width:660px){ .sidebar{display:none;} .topbar{padding:0 18px;} .content{padding:18px 18px 44px;} .today-banner{flex-direction:column;align-items:flex-start;gap:14px;} .tb-right-col{flex-direction:row;align-items:center;} }
+  </style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="sb-glow sb-glow-1"></div>
+  <div class="sb-glow sb-glow-2"></div>
+
+  <div class="sb-brand">
+    <div class="sb-dots">
+      <div class="sb-dot" style="background:#4ADE80"></div>
+      <div class="sb-dot" style="background:#FB923C"></div>
+      <div class="sb-dot" style="background:#FACC15"></div>
+      <div class="sb-dot" style="background:#60A5FA"></div>
+    </div>
+    <div class="sb-name">푸르메재단<br>넥슨어린이재활병원</div>
+    <div class="sb-sub">Rehabilitation Center · Education</div>
+  </div>
+
+  <nav class="sb-nav">
+    <div class="sb-sec">교육 센터</div>
+    <a class="sb-link active" href="#">
+      <div class="sb-icon"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
+      교육 목록
+    </a>
+    <a class="sb-link" href="player.html">
+      <div class="sb-icon"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+      나의 강의실
+    </a>
+    <a class="sb-link" href="attendance.html">
+      <div class="sb-icon"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+      QR 출석
+    </a>
+
+    <div class="sb-sec">학습 지원</div>
+    <a class="sb-link" href="#">
+      <div class="sb-icon"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+      학습지원센터
+    </a>
+    <a class="sb-link" href="#">
+      <div class="sb-icon"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+      교육 자료실
+    </a>
+  </nav>
+
+  <div class="sb-notice" style="margin-bottom:14px;">
+    <div class="sb-notice-inner">
+      <div class="sb-notice-hd">
+        <span class="sb-notice-title">공지사항</span>
+        <svg width="13" height="13" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      <div class="sb-notice-item">2025년 신규입사자 연간교육 일정 안내</div>
+      <div class="sb-notice-item">사용 가능한 브라우저 안내</div>
+    </div>
+  </div>
+
+  <div class="sb-bottom">
+    <div class="sb-support">
+      <div class="sb-sup-label">교육 담당자 연락처</div>
+      <div class="sb-sup-num">내선 9095</div>
+      <div class="sb-sup-hours">평일 09:00 ~ 18:00<br>점심 12:00 ~ 13:00<br><strong style="color:rgba(255,255,255,0.75)">주말·공휴일 휴무</strong></div>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <div class="topbar">
+    <div class="tb-crumb">
+      <span>교육 센터</span>
+      <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      <span class="cur">교육 목록</span>
+    </div>
+    <div class="tb-right">
+      <span class="tb-date" id="tbDate">—</span>
+      <a href="admin.html" class="tb-admin">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM6 20v-2a6 6 0 0 1 12 0v2"/></svg>
+        관리자
+      </a>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- Banner slot -->
+    <div id="bannerSlot"></div>
+
+    <!-- Today courses -->
+    <div class="sec-hd">
+      <h2 class="sec-title">오늘의 <em>집합교육</em></h2>
+      <span class="sec-meta" id="todayLabel">—</span>
+    </div>
+    <div id="todayGrid" class="course-grid" style="margin-bottom:40px;">
+      <div class="c-card"><div class="c-stripe s-blue"></div><div class="c-body"><div class="sk" style="height:18px;width:68%;margin-bottom:10px;"></div><div class="sk" style="height:13px;width:52%;margin-bottom:20px;"></div><div class="sk" style="height:38px;"></div></div></div>
+      <div class="c-card"><div class="c-stripe s-blue"></div><div class="c-body"><div class="sk" style="height:18px;width:58%;margin-bottom:10px;"></div><div class="sk" style="height:13px;width:44%;margin-bottom:20px;"></div><div class="sk" style="height:38px;"></div></div></div>
+    </div>
+
+    <!-- Upcoming -->
+    <div class="sec-hd" style="margin-top:4px;">
+      <h2 class="sec-title">예정된 <em>교육 일정</em></h2>
+      <span class="sec-meta" id="upcCount">—</span>
+    </div>
+    <div id="upcList" class="upc-list"></div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="modal" class="modal-ov" style="display:none">
+  <div class="modal-box">
+    <div class="m-hd">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+        <h2 class="m-title">교육 신청</h2>
+        <button class="m-close" onclick="closeModal()"><svg width="16" height="16" fill="none" stroke="#64748B" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <p class="m-sub" id="mCourse"></p>
+    </div>
+    <div class="m-bd">
+      <div class="fg"><label class="fl">이름 *</label><input type="text" id="rName" class="fi" placeholder="홍길동" /></div>
+      <div class="fg">
+        <label class="fl">부서 *</label>
+        <select id="rDept" class="fi">
+          <option value="">부서를 선택하세요</option>
+          <option>재활치료센터</option><option>작업치료팀</option><option>물리치료팀</option>
+          <option>언어치료팀</option><option>심리팀</option><option>사회사업팀</option>
+          <option>간호팀</option><option>행정팀</option><option>기타</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">직군 *</label>
+        <select id="rRole" class="fi">
+          <option value="">직군을 선택하세요</option>
+          <option>작업치료사</option><option>물리치료사</option><option>언어재활사</option>
+          <option>심리사</option><option>사회복지사</option><option>간호사</option>
+          <option>행정직</option><option>기타</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">연락처</label><input type="tel" id="rPhone" class="fi" placeholder="010-0000-0000" /></div>
+      <div id="rMsg" class="fm"></div>
+    </div>
+    <div class="m-ft">
+      <button onclick="closeModal()" class="m-btn gh">취소</button>
+      <button onclick="submitReg()" id="rSubmit" class="m-btn pr">신청하기</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const API_URL = window.EDU_CONFIG?.API_URL || '';
+let courses = [], curId = null;
+
+// Date
+(function(){
+  const d = new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+  document.getElementById('tbDate').textContent = d;
+  document.getElementById('todayLabel').textContent = d;
+})();
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const today = () => new Date().toISOString().split('T')[0];
+
+function pillClass(c) {
+  const t = today(), f = +c['신청수']||0, cap = +c['정원']||30;
+  if(c['날짜']<t || c['상태']==='종료') return 'ended';
+  if(f>=cap) return 'full';
+  if(c['날짜']===t) return 'today2';
+  return 'open';
+}
+const pillLabel = { ended:'종료', full:'정원마감', today2:'오늘교육', open:'신청가능' };
+
+function canReg(c) {
+  const t = today(), f = +c['신청수']||0, cap = +c['정원']||30;
+  return c['날짜']>=t && c['상태']!=='종료' && f<cap;
+}
+
+function pColor(pct) {
+  return pct>=90?'#EF4444':pct>=70?'#F97316':'#2563EB';
+}
+
+function card(c, i) {
+  const id = c['교육ID'], f = +c['신청수']||0, cap = +c['정원']||30;
+  const pct = Math.min(100,Math.round(f/cap*100));
+  const t = today();
+  const stripe = c['날짜']===t?'s-blue':pct>=70?'s-orange':'s-gray';
+  const pc = pillClass(c), ok = canReg(c);
+  return `
+  <div class="c-card" style="animation-delay:${i*0.06}s">
+    <div class="c-stripe ${stripe}"></div>
+    <div class="c-body">
+      <div class="c-top">
+        <h3 class="c-title">${c['교육명']}</h3>
+        <span class="s-pill ${pc}">${pillLabel[pc]}</span>
+      </div>
+      <div class="c-info">
+        <div class="c-info-row"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>${c['날짜']} &nbsp;${c['시작시간']} ~ ${c['종료시간']}</span></div>
+        <div class="c-info-row"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a2 2 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"/><circle cx="12" cy="11" r="3"/></svg><span>${c['장소']}</span></div>
+        ${c['설명']?`<div class="c-info-row" style="align-items:flex-start;"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-top:2px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="c-desc">${c['설명']}</span></div>`:''}
+      </div>
+      <div class="c-prog">
+        <div class="c-prog-hd"><span class="c-prog-l">신청 현황</span><span class="c-prog-r" style="color:${pColor(pct)}">${f} / ${cap}명</span></div>
+        <div class="c-prog-track"><div class="c-prog-fill" style="width:${pct}%;background:${pColor(pct)};"></div></div>
+      </div>
+      <div class="c-actions">
+        <button onclick="openModal('${id}')" class="c-btn pr" ${!ok?'disabled':''}><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>${ok?'신청하기':'마감'}</button>
+        <a href="attendance.html?id=${id}" class="c-btn tl"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>QR 출석</a>
+        ${c['영상URL']?`<a href="player.html?id=${id}" class="c-btn sc"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>영상</a>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function upcRow(c, i) {
+  const [,m,d] = c['날짜'].split('-');
+  const f=+c['신청수']||0, cap=+c['정원']||30, ok=canReg(c);
+  return `
+  <div class="upc-item" style="animation-delay:${i*0.055}s">
+    <div class="upc-date"><span class="upc-m">${MONTHS[+m-1]}</span><span class="upc-d">${d}</span></div>
+    <div class="upc-info">
+      <div class="upc-name">${c['교육명']}</div>
+      <div class="upc-sub">${c['시작시간']} ~ ${c['종료시간']} · ${c['장소']} · ${f}/${cap}명</div>
+    </div>
+    <div class="upc-act"><button class="${ok?'':'dis'}" ${ok?`onclick="openModal('${c['교육ID']}')"`:''} ${!ok?'disabled':''}>${ok?'신청':'마감'}</button></div>
+  </div>`;
+}
+
+async function load() {
+  try {
+    const res = await fetch(`${API_URL}?action=getCourses`);
+    const data = await res.json();
+    if(!data.success) throw new Error();
+    courses = data.data;
+    const t = today();
+    const todayC = courses.filter(c=>c['날짜']===t);
+    const upc    = courses.filter(c=>c['날짜']>t);
+
+    // Banner
+    if(todayC.length) {
+      const first = todayC[0];
+      document.getElementById('bannerSlot').innerHTML = `
+        <div class="today-banner" style="margin-bottom:26px;">
+          <div class="today-banner-bg"></div>
+          <div style="position:relative;z-index:1;">
+            <div class="tb-tag"><span style="width:7px;height:7px;border-radius:50%;background:#4ADE80;display:inline-block;"></span>TODAY · 집합교육</div>
+            <div class="tb-title">${todayC.length>1?`오늘 ${todayC.length}개 교육이 예정되어 있습니다`:first['교육명']}</div>
+            <div class="tb-metas">
+              <div class="tb-meta"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>${first['시작시간']} ~ ${first['종료시간']}</div>
+              <div class="tb-meta"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a2 2 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"/><circle cx="12" cy="11" r="3"/></svg>${first['장소']}</div>
+            </div>
+          </div>
+          <div class="tb-right-col">
+            <div class="tb-count"><div class="tb-count-n">${todayC.length}</div><div class="tb-count-l">오늘 교육</div></div>
+            <button class="tb-down-btn" onclick="document.getElementById('todayGrid').scrollIntoView({behavior:'smooth'})"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>확인하기</button>
+          </div>
+        </div>`;
+    }
+
+    // Today grid
+    document.getElementById('todayGrid').innerHTML = todayC.length
+      ? todayC.map((c,i)=>card(c,i)).join('')
+      : `<div class="empty" style="grid-column:1/-1;"><div class="empty-ico"><svg width="24" height="24" fill="none" stroke="#3B82F6" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><p style="font-weight:700;color:#334155;margin-bottom:5px;">오늘 예정된 교육이 없습니다</p><p style="font-size:0.8rem;color:#94A3B8;">아래에서 예정된 교육을 확인해 주세요</p></div>`;
+
+    // Upcoming
+    document.getElementById('upcCount').textContent = `총 ${upc.length}개`;
+    document.getElementById('upcList').innerHTML = upc.length
+      ? upc.slice(0,8).map((c,i)=>upcRow(c,i)).join('')
+      : `<div style="text-align:center;padding:30px;color:#94A3B8;font-size:0.83rem;">예정된 교육이 없습니다</div>`;
+
+  } catch {
+    document.getElementById('todayGrid').innerHTML = `<div class="empty" style="grid-column:1/-1;"><div class="empty-ico"><svg width="24" height="24" fill="none" stroke="#EF4444" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><p style="font-weight:700;color:#DC2626;margin-bottom:5px;">데이터를 불러올 수 없습니다</p><p style="font-size:0.8rem;color:#94A3B8;">config.js의 API URL을 확인해 주세요</p><button onclick="load()" style="margin-top:12px;background:#EFF6FF;color:#1D4ED8;border:1.5px solid #BFDBFE;border-radius:8px;padding:7px 16px;font-size:0.8rem;font-weight:700;cursor:pointer;font-family:inherit;">다시 시도</button></div>`;
+  }
+}
+
+function openModal(id) {
+  curId = id;
+  const c = courses.find(x=>x['교육ID']===id);
+  if(!c) return;
+  document.getElementById('mCourse').textContent = c['교육명'];
+  ['rName','rPhone'].forEach(i=>document.getElementById(i).value='');
+  ['rDept','rRole'].forEach(i=>document.getElementById(i).value='');
+  const msg = document.getElementById('rMsg'); msg.style.display='none';
+  document.getElementById('modal').style.display='flex';
+}
+function closeModal() { document.getElementById('modal').style.display='none'; curId=null; }
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+
+async function submitReg() {
+  const name=document.getElementById('rName').value.trim();
+  const dept=document.getElementById('rDept').value;
+  const role=document.getElementById('rRole').value;
+  const phone=document.getElementById('rPhone').value.trim();
+  if(!name||!dept||!role){showM('rMsg','이름, 부서, 직군은 필수입니다.','err');return;}
+  const btn=document.getElementById('rSubmit');
+  btn.disabled=true; btn.textContent='신청 중...';
+  try {
+    const res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'registerCourse',courseId:curId,name,department:dept,role,phone})});
+    const data=await res.json();
+    if(data.success){showM('rMsg','✅ 신청이 완료되었습니다!','suc');setTimeout(()=>{closeModal();load();toast('신청이 완료되었습니다.');},1300);}
+    else showM('rMsg',data.error,'err');
+  } catch {showM('rMsg','네트워크 오류가 발생했습니다.','err');}
+  finally{btn.disabled=false;btn.textContent='신청하기';}
+}
+function showM(id,msg,type){const el=document.getElementById(id);el.className='fm '+type;el.textContent=msg;el.style.display='block';}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
+
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR 출석 | 재활치료센터 교육 플랫폼</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <script src="assets/js/config.js"></script>
+  <style>
+    :root {
+      --navy:#0B1F4B; --blue:#1A4FA8; --blue-b:#2563EB; --teal:#0891B2;
+      --green:#059669; --green-bg:#D1FAE5; --red:#DC2626; --red-bg:#FEE2E2;
+      --bg:#F0F4F8; --surface:#fff; --border:#E2E8F0;
+      --t1:#0F172A; --t2:#334155; --t3:#64748B; --sidebar-w:270px;
+    }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Pretendard','Noto Sans KR',sans-serif; background:var(--bg); color:var(--t1); display:flex; min-height:100vh; -webkit-font-smoothing:antialiased; }
+
+    /* Sidebar – shared */
+    .sidebar { width:var(--sidebar-w); background:var(--navy); display:flex; flex-direction:column; position:sticky; top:0; height:100vh; overflow:hidden; flex-shrink:0; }
+    .sb-glow { position:absolute; pointer-events:none; border-radius:50%; }
+    .sb-g1 { top:-100px;left:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(37,99,235,0.17) 0%,transparent 70%); }
+    .sb-g2 { bottom:0;right:-80px;width:230px;height:230px;background:radial-gradient(circle,rgba(8,145,178,0.13) 0%,transparent 70%); }
+    .sb-brand { padding:30px 24px 22px; border-bottom:1px solid rgba(255,255,255,0.07); position:relative;z-index:1; }
+    .sb-dots { display:flex;gap:5px;margin-bottom:14px; }
+    .sb-dot { width:9px;height:9px;border-radius:50%; }
+    .sb-name { font-family:'Noto Serif KR',serif;font-size:0.97rem;font-weight:700;color:#fff;line-height:1.55; }
+    .sb-sub { font-size:0.67rem;color:rgba(255,255,255,0.38);letter-spacing:0.09em;text-transform:uppercase;margin-top:5px; }
+    .sb-nav { padding:18px 14px;flex:1;overflow-y:auto;position:relative;z-index:1; }
+    .sb-sec { font-size:0.63rem;font-weight:700;color:rgba(255,255,255,0.28);letter-spacing:0.12em;text-transform:uppercase;padding:0 10px;margin:18px 0 6px; }
+    .sb-sec:first-child { margin-top:0; }
+    .sb-link { display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:9px;color:rgba(255,255,255,0.55);font-size:0.855rem;font-weight:500;cursor:pointer;transition:all 0.15s;text-decoration:none; }
+    .sb-link:hover { background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.9); }
+    .sb-link.active { background:rgba(37,99,235,0.28);color:#fff; }
+    .sb-icon { width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+    .sb-link.active .sb-icon { background:rgba(37,99,235,0.45); }
+    .sb-link:hover .sb-icon { background:rgba(255,255,255,0.07); }
+    .sb-notice { margin:0 14px;position:relative;z-index:1; }
+    .sb-ni { background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:13px 15px; }
+    .sb-nh { display:flex;justify-content:space-between;align-items:center;margin-bottom:9px; }
+    .sb-nt { font-size:0.75rem;font-weight:700;color:rgba(255,255,255,0.75); }
+    .sb-nitem { font-size:0.69rem;color:rgba(255,255,255,0.4);line-height:1.55;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05); }
+    .sb-nitem:last-child { border-bottom:none; }
+    .sb-bot { padding:16px 14px 26px;position:relative;z-index:1; }
+    .sb-sup { background:linear-gradient(135deg,rgba(20,41,122,0.9),rgba(8,100,145,0.8));border:1px solid rgba(255,255,255,0.1);border-radius:13px;padding:15px 16px; }
+    .sb-sl { font-size:0.67rem;color:rgba(255,255,255,0.5);font-weight:600;margin-bottom:3px; }
+    .sb-sn { font-size:1.2rem;font-weight:800;color:#fff;letter-spacing:-0.02em; }
+    .sb-sh { font-size:0.65rem;color:rgba(255,255,255,0.45);margin-top:7px;line-height:1.65; }
+
+    /* Main */
+    .main { flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0; }
+    .topbar { background:var(--surface);border-bottom:1px solid var(--border);height:58px;padding:0 32px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0; }
+    .tb-crumb { display:flex;align-items:center;gap:7px;font-size:0.8rem;color:var(--t3); }
+    .tb-crumb .cur { color:var(--t1);font-weight:700; }
+    .tb-back { display:flex;align-items:center;gap:6px;background:var(--bg);border:1.5px solid var(--border);color:var(--t2);border-radius:9px;padding:6px 14px;font-size:0.79rem;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;transition:all 0.15s; }
+    .tb-back:hover { background:#E2E8F0; }
+
+    .content { flex:1;overflow-y:auto;padding:36px 48px 56px;display:flex;align-items:flex-start;justify-content:center; }
+    .att-wrap { width:100%;max-width:520px; }
+
+    /* Course info card */
+    .info-card { background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:20px; }
+    .info-card-stripe { height:3px;background:linear-gradient(90deg,var(--blue),var(--teal)); }
+    .info-card-body { padding:20px 24px; }
+    .info-card-label { font-size:0.7rem;font-weight:700;color:var(--blue-b);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:6px; }
+    .info-card-title { font-family:'Noto Serif KR',serif;font-size:1.15rem;font-weight:700;color:var(--t1);letter-spacing:-0.02em;margin-bottom:12px; }
+    .info-row { display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--t2);margin-bottom:6px; }
+    .info-row svg { color:var(--blue-b);flex-shrink:0; }
+    .info-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px; }
+    .info-box { background:var(--bg);border-radius:10px;padding:11px 14px; }
+    .info-box-l { font-size:0.7rem;color:var(--t3);font-weight:600;margin-bottom:3px; }
+    .info-box-v { font-size:0.85rem;font-weight:700;color:var(--t1); }
+
+    /* Form card */
+    .form-card { background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px 28px; }
+    .form-step { display:flex;align-items:center;gap:10px;margin-bottom:22px; }
+    .step-badge { width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;font-size:0.82rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+    .step-text { font-family:'Noto Serif KR',serif;font-size:1.05rem;font-weight:700;color:var(--t1);letter-spacing:-0.02em; }
+    .fg { margin-bottom:14px; }
+    .fl { display:block;font-size:0.78rem;font-weight:700;color:var(--t2);margin-bottom:6px; }
+    .fi { width:100%;padding:13px 15px;border:1.5px solid var(--border);border-radius:10px;font-size:0.92rem;font-family:inherit;outline:none;transition:border-color 0.15s;color:var(--t1);background:var(--surface); }
+    .fi:focus { border-color:var(--blue); }
+    select.fi { appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' fill='%2364748B' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px; }
+    .fm { padding:10px 14px;border-radius:9px;font-size:0.81rem;margin-top:10px;display:none; }
+    .fm.err { background:var(--red-bg);color:var(--red); }
+    .fm.suc { background:var(--green-bg);color:var(--green); }
+
+    .att-btn {
+      width:100%;padding:16px;border-radius:12px;
+      background:var(--blue);color:#fff;border:none;
+      font-size:1rem;font-weight:800;font-family:inherit;
+      cursor:pointer;transition:all 0.18s;
+      display:flex;align-items:center;justify-content:center;gap:8px;
+      margin-top:20px;
+    }
+    .att-btn:hover { background:var(--blue-b);transform:translateY(-1px);box-shadow:0 6px 20px rgba(26,79,168,0.25); }
+    .att-btn:disabled { background:#CBD5E1;cursor:not-allowed;transform:none;box-shadow:none; }
+
+    /* Success */
+    .success-card { background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:44px 28px;text-align:center;animation:sIn 0.5s cubic-bezier(0.16,1,0.3,1); }
+    @keyframes sIn { from{opacity:0;transform:scale(0.92)} to{opacity:1;transform:scale(1)} }
+    .success-ring { width:88px;height:88px;border-radius:50%;background:var(--green-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:ring 2s infinite; }
+    @keyframes ring { 0%,100%{box-shadow:0 0 0 0 rgba(5,150,105,0.35)} 50%{box-shadow:0 0 0 18px rgba(5,150,105,0)} }
+    .success-title { font-family:'Noto Serif KR',serif;font-size:1.5rem;font-weight:700;color:var(--t1);margin-bottom:6px;letter-spacing:-0.02em; }
+    .success-sub { font-size:0.88rem;color:var(--t3);margin-bottom:20px; }
+    .success-info { background:var(--bg);border-radius:12px;padding:16px 20px;text-align:left;margin-bottom:22px; }
+    .si-row { display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:0.83rem; }
+    .si-row:last-child { border-bottom:none; }
+    .si-k { color:var(--t3);font-weight:500; }
+    .si-v { color:var(--t1);font-weight:700; }
+    .go-btn { width:100%;padding:14px;border-radius:12px;background:var(--teal);color:#fff;border:none;font-size:0.95rem;font-weight:800;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all 0.15s;text-decoration:none;margin-bottom:10px; }
+    .go-btn:hover { background:#0E7490; }
+    .back-link { display:block;text-align:center;font-size:0.82rem;color:var(--t3);cursor:pointer;padding:4px;text-decoration:none; }
+    .back-link:hover { color:var(--blue); }
+
+    @media(max-width:660px){ .sidebar{display:none;} .topbar{padding:0 18px;} .content{padding:24px 18px 44px;} .form-card{padding:20px 18px;} }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sb-glow sb-g1"></div>
+  <div class="sb-glow sb-g2"></div>
+  <div class="sb-brand">
+    <div class="sb-dots">
+      <div class="sb-dot" style="background:#4ADE80"></div><div class="sb-dot" style="background:#FB923C"></div>
+      <div class="sb-dot" style="background:#FACC15"></div><div class="sb-dot" style="background:#60A5FA"></div>
+    </div>
+    <div class="sb-name">푸르메재단<br>넥슨어린이재활병원</div>
+    <div class="sb-sub">Rehabilitation Center · Education</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-sec">교육 센터</div>
+    <a class="sb-link" href="index.html"><div class="sb-icon"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>교육 목록</a>
+    <a class="sb-link" href="player.html"><div class="sb-icon"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>나의 강의실</a>
+    <a class="sb-link active" href="#"><div class="sb-icon"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>QR 출석</a>
+    <div class="sb-sec">학습 지원</div>
+    <a class="sb-link" href="#"><div class="sb-icon"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>학습지원센터</a>
+  </nav>
+  <div class="sb-notice" style="margin-bottom:14px;">
+    <div class="sb-ni">
+      <div class="sb-nh"><span class="sb-nt">공지사항</span></div>
+      <div class="sb-nitem">2025년 신규입사자 연간교육 일정 안내</div>
+      <div class="sb-nitem">사용 가능한 브라우저 안내</div>
+    </div>
+  </div>
+  <div class="sb-bot">
+    <div class="sb-sup">
+      <div class="sb-sl">교육 담당자 연락처</div>
+      <div class="sb-sn">내선 9095</div>
+      <div class="sb-sh">평일 09:00 ~ 18:00<br>점심 12:00 ~ 13:00<br><strong style="color:rgba(255,255,255,0.75)">주말·공휴일 휴무</strong></div>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="tb-crumb">
+      <span>교육 센터</span>
+      <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      <span class="cur">QR 출석</span>
+    </div>
+    <a href="index.html" class="tb-back">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      교육 목록으로
+    </a>
+  </div>
+
+  <div class="content">
+    <div class="att-wrap">
+
+      <!-- Course info -->
+      <div class="info-card">
+        <div class="info-card-stripe"></div>
+        <div class="info-card-body">
+          <div class="info-card-label">집합교육 출석</div>
+          <div class="info-card-title" id="cTitle">교육 정보 로딩 중...</div>
+          <div class="info-row"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span id="cTime">—</span></div>
+          <div class="info-row"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a2 2 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"/><circle cx="12" cy="11" r="3"/></svg><span id="cLoc">—</span></div>
+          <div class="info-grid">
+            <div class="info-box"><div class="info-box-l">출석 가능 시간</div><div class="info-box-v" id="cAttTime">제한 없음</div></div>
+            <div class="info-box"><div class="info-box-l">교육 날짜</div><div class="info-box-v" id="cDate">—</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 1: form -->
+      <div id="step1" class="form-card">
+        <div class="form-step">
+          <div class="step-badge">1</div>
+          <div class="step-text">본인 정보를 입력하세요</div>
+        </div>
+        <div class="fg"><label class="fl">이름 *</label><input type="text" id="aName" class="fi" placeholder="홍길동" autocomplete="name" /></div>
+        <div class="fg">
+          <label class="fl">부서 *</label>
+          <select id="aDept" class="fi">
+            <option value="">부서를 선택하세요</option>
+            <option>재활치료센터</option><option>작업치료팀</option><option>물리치료팀</option>
+            <option>언어치료팀</option><option>심리팀</option><option>사회사업팀</option>
+            <option>간호팀</option><option>행정팀</option><option>기타</option>
+          </select>
+        </div>
+        <div id="aMsg" class="fm"></div>
+        <button id="aBtn" class="att-btn" onclick="submit()">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          출석 확인
+        </button>
+      </div>
+
+      <!-- Step 2: success -->
+      <div id="step2" style="display:none">
+        <div class="success-card">
+          <div class="success-ring">
+            <svg width="40" height="40" fill="none" stroke="#059669" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <h2 class="success-title">출석 완료!</h2>
+          <p class="success-sub">출석이 성공적으로 기록되었습니다</p>
+          <div class="success-info">
+            <div class="si-row"><span class="si-k">이름</span><span class="si-v" id="sName"></span></div>
+            <div class="si-row"><span class="si-k">부서</span><span class="si-v" id="sDept"></span></div>
+            <div class="si-row"><span class="si-k">출석 시간</span><span class="si-v" id="sTime"></span></div>
+            <div class="si-row"><span class="si-k">교육명</span><span class="si-v" id="sCourse" style="text-align:right;max-width:60%;"></span></div>
+          </div>
+          <a id="videoBtn" href="#" class="go-btn">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            교육 영상 시청하기
+          </a>
+          <a href="index.html" class="back-link">← 메인으로 돌아가기</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const API_URL = window.EDU_CONFIG?.API_URL || '';
+const courseId = new URLSearchParams(location.search).get('id');
+let courseName = '';
+
+async function loadCourse() {
+  if (!courseId) return;
+  try {
+    const r = await fetch(`${API_URL}?action=getCourseById&courseId=${courseId}`);
+    const d = await r.json();
+    if (d.success) {
+      const c = d.data;
+      courseName = c['교육명'];
+      document.getElementById('cTitle').textContent = c['교육명'];
+      document.getElementById('cTime').textContent = `${c['날짜']} ${c['시작시간']} ~ ${c['종료시간']}`;
+      document.getElementById('cLoc').textContent = c['장소'];
+      document.getElementById('cDate').textContent = c['날짜'];
+      document.getElementById('cAttTime').textContent = c['출석시작'] ? `${c['출석시작'].slice(11)} ~ ${c['출석종료'].slice(11)}` : '제한 없음';
+      document.getElementById('videoBtn').href = `player.html?id=${courseId}`;
+    }
+  } catch {}
+}
+
+async function submit() {
+  const name = document.getElementById('aName').value.trim();
+  const dept = document.getElementById('aDept').value;
+  if (!name || !dept) { showM('이름과 부서를 입력해 주세요.','err'); return; }
+  const btn = document.getElementById('aBtn');
+  btn.disabled = true;
+  btn.innerHTML = `<svg class="animate-spin" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> 처리 중...`;
+  try {
+    const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'checkAttendance',courseId,name,department:dept}) });
+    const d = await r.json();
+    if (d.success) {
+      document.getElementById('step1').style.display = 'none';
+      document.getElementById('step2').style.display = 'block';
+      document.getElementById('sName').textContent = name;
+      document.getElementById('sDept').textContent = dept;
+      document.getElementById('sTime').textContent = d.time || new Date().toLocaleString('ko-KR');
+      document.getElementById('sCourse').textContent = courseName;
+      window.scrollTo(0,0);
+    } else {
+      showM(d.error,'err');
+      btn.disabled = false;
+      btn.innerHTML = `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg> 출석 확인`;
+    }
+  } catch {
+    showM('네트워크 오류. 다시 시도해 주세요.','err');
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg> 출석 확인`;
+  }
+}
+
+function showM(msg, type) {
+  const el = document.getElementById('aMsg');
+  el.className = 'fm ' + type; el.textContent = msg; el.style.display = 'block';
+}
+
+loadCourse();
+</script>
+</body>
+</html>

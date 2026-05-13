@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>관리자 | 재활치료센터 교육 플랫폼</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script>
+    const adminPassword = '병원비밀번호';
+    const enteredPassword = prompt('관리자 비밀번호를 입력하세요');
+    if (enteredPassword !== adminPassword) {
+      alert('비밀번호가 올바르지 않습니다.');
+      location.href = 'index.html';
+    }
+  </script>
+  <style>
+    :root {
+      --blue: #0A4FA3;
+      --blue-light: #EBF3FF;
+      --teal: #0891B2;
+      --green: #0D9488;
+      --orange: #EA580C;
+      --red: #DC2626;
+      --gray-bg: #F1F5F9;
+    }
+    * { -webkit-font-smoothing: antialiased; }
+    body { font-family: 'Noto Sans KR', sans-serif; background: var(--gray-bg); color: #0F172A; }
+    h1,h2,h3 { font-family: 'Noto Serif KR', serif; }
+    .sidebar { width: 240px; min-height: 100vh; background: #0F172A; }
+    .sidebar-link { display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-radius: 10px; color: #94A3B8; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+    .sidebar-link:hover, .sidebar-link.active { background: rgba(255,255,255,0.08); color: white; }
+    .sidebar-link.active { background: var(--blue); color: white; }
+    .card { background: white; border-radius: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04); }
+    .stat-card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .badge { font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
+    .btn { padding: 8px 16px; border-radius: 10px; font-weight: 600; font-size: 0.85rem; cursor: pointer; border: none; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-blue { background: var(--blue); color: white; }
+    .btn-blue:hover { background: #1557B8; }
+    .btn-teal { background: var(--teal); color: white; }
+    .btn-teal:hover { background: #0E7490; }
+    .btn-red { background: var(--red); color: white; }
+    .btn-red:hover { background: #B91C1C; }
+    .btn-ghost { background: transparent; color: #475569; border: 1.5px solid #E2E8F0; }
+    .btn-ghost:hover { background: #F8FAFC; }
+    .btn-lg { padding: 12px 24px; font-size: 1rem; border-radius: 12px; }
+    .form-input { width: 100%; padding: 10px 14px; border: 1.5px solid #E2E8F0; border-radius: 10px; font-size: 0.9rem; font-family: 'Noto Sans KR', sans-serif; outline: none; transition: border-color 0.15s; }
+    .form-input:focus { border-color: var(--blue); }
+    .form-label { font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 5px; display: block; }
+    textarea.form-input { resize: vertical; min-height: 80px; }
+    select.form-input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%23475569' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #F8FAFC; color: #64748B; font-size: 0.78rem; font-weight: 600; text-align: left; padding: 10px 14px; border-bottom: 1px solid #E2E8F0; }
+    td { padding: 12px 14px; border-bottom: 1px solid #F1F5F9; font-size: 0.875rem; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #F8FAFC; }
+    .tab { padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.15s; color: #64748B; }
+    .tab.active { background: var(--blue); color: white; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.5); backdrop-filter: blur(4px); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .modal-box { background: white; border-radius: 20px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; }
+    .qr-modal-box { background: white; border-radius: 20px; width: 100%; max-width: 400px; }
+    /* mobile */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main-content { padding: 16px; }
+    }
+  </style>
+</head>
+<body class="flex">
+
+<!-- Sidebar (desktop) -->
+<aside class="sidebar hidden md:flex flex-col p-4 sticky top-0">
+  <div class="mb-6 px-2">
+    <p class="text-xs text-gray-500 mb-0.5">푸르메재단 넥슨어린이재활병원</p>
+    <h1 class="text-white font-bold text-base leading-snug" style="font-family:'Noto Serif KR',serif;">교육 플랫폼<br>관리자</h1>
+  </div>
+  <nav class="space-y-1 flex-1">
+    <div class="sidebar-link active" onclick="showTab('dashboard')">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      대시보드
+    </div>
+    <div class="sidebar-link" onclick="showTab('courses')">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      교육 관리
+    </div>
+    <div class="sidebar-link" onclick="showTab('registrations')">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      신청 현황
+    </div>
+    <div class="sidebar-link" onclick="showTab('attendance')">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      출석 현황
+    </div>
+    <div class="sidebar-link" onclick="showTab('completions')">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+      수료 현황
+    </div>
+    <div class="sidebar-link" onclick="showTab('qr')">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>
+      QR 생성
+    </div>
+  </nav>
+  <div class="pt-4 border-t border-white/10">
+    <a href="index.html" class="sidebar-link text-sm">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      메인으로
+    </a>
+  </div>
+</aside>
+
+<!-- Main Content -->
+<div class="flex-1 main-content p-6 overflow-x-hidden">
+
+  <!-- Mobile Top Nav -->
+  <div class="md:hidden flex gap-2 mb-4 overflow-x-auto pb-1">
+    <div class="tab active whitespace-nowrap" onclick="showTab('dashboard')">대시보드</div>
+    <div class="tab whitespace-nowrap" onclick="showTab('courses')">교육관리</div>
+    <div class="tab whitespace-nowrap" onclick="showTab('registrations')">신청</div>
+    <div class="tab whitespace-nowrap" onclick="showTab('attendance')">출석</div>
+    <div class="tab whitespace-nowrap" onclick="showTab('completions')">수료</div>
+    <div class="tab whitespace-nowrap" onclick="showTab('qr')">QR</div>
+  </div>
+
+  <!-- ===================== DASHBOARD ===================== -->
+  <div id="tab-dashboard">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-xl font-bold">대시보드</h2>
+      <button onclick="initSheets()" class="btn btn-ghost text-xs">시트 초기화</button>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="stat-card">
+        <p class="text-xs text-gray-500 mb-1">총 신청</p>
+        <p class="text-3xl font-bold text-blue-700" id="statReg">—</p>
+        <p class="text-xs text-gray-400 mt-1">명</p>
+      </div>
+      <div class="stat-card">
+        <p class="text-xs text-gray-500 mb-1">총 출석</p>
+        <p class="text-3xl font-bold text-teal-600" id="statAtt">—</p>
+        <p class="text-xs text-gray-400 mt-1">명</p>
+      </div>
+      <div class="stat-card">
+        <p class="text-xs text-gray-500 mb-1">설문 완료</p>
+        <p class="text-3xl font-bold text-green-600" id="statSurvey">—</p>
+        <p class="text-xs text-gray-400 mt-1">명</p>
+      </div>
+      <div class="stat-card">
+        <p class="text-xs text-gray-500 mb-1">수료율</p>
+        <p class="text-3xl font-bold text-orange-600" id="statRate">—</p>
+        <p class="text-xs text-gray-400 mt-1">%</p>
+      </div>
+    </div>
+
+    <!-- Course Summary -->
+    <div class="card p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-base">교육별 현황</h3>
+        <button onclick="loadDashboard()" class="btn btn-ghost btn-sm text-xs">새로고침</button>
+      </div>
+      <div id="dashboardTable" class="overflow-x-auto">
+        <p class="text-sm text-gray-400 py-4 text-center">데이터 로딩 중...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== COURSES ===================== -->
+  <div id="tab-courses" class="hidden">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-xl font-bold">교육 관리</h2>
+      <button onclick="openCourseModal()" class="btn btn-blue">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        교육 추가
+      </button>
+    </div>
+    <div class="card overflow-hidden">
+      <div class="overflow-x-auto">
+        <table>
+          <thead>
+            <tr>
+              <th>교육명</th>
+              <th>날짜</th>
+              <th>시간</th>
+              <th>장소</th>
+              <th>신청/정원</th>
+              <th>상태</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody id="coursesTableBody">
+            <tr><td colspan="7" class="text-center text-gray-400 py-8">로딩 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== REGISTRATIONS ===================== -->
+  <div id="tab-registrations" class="hidden">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-xl font-bold">신청 현황</h2>
+      <select id="regCourseFilter" class="form-input w-auto text-sm" onchange="loadRegistrations()">
+        <option value="">전체 교육</option>
+      </select>
+    </div>
+    <div class="card overflow-hidden">
+      <div class="overflow-x-auto">
+        <table>
+          <thead><tr><th>이름</th><th>부서</th><th>직군</th><th>연락처</th><th>신청일시</th><th>상태</th></tr></thead>
+          <tbody id="regTableBody"><tr><td colspan="6" class="text-center text-gray-400 py-8">데이터 없음</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== ATTENDANCE ===================== -->
+  <div id="tab-attendance" class="hidden">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-xl font-bold">출석 현황</h2>
+      <select id="attCourseFilter" class="form-input w-auto text-sm" onchange="loadAttendance()">
+        <option value="">전체 교육</option>
+      </select>
+    </div>
+    <div class="card overflow-hidden">
+      <div class="overflow-x-auto">
+        <table>
+          <thead><tr><th>이름</th><th>부서</th><th>출석시간</th><th>방법</th></tr></thead>
+          <tbody id="attTableBody"><tr><td colspan="4" class="text-center text-gray-400 py-8">데이터 없음</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== COMPLETIONS ===================== -->
+  <div id="tab-completions" class="hidden">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-xl font-bold">수료 현황</h2>
+      <select id="compCourseFilter" class="form-input w-auto text-sm" onchange="loadCompletions()">
+        <option value="">전체 교육</option>
+      </select>
+    </div>
+    <div class="card overflow-hidden">
+      <div class="overflow-x-auto">
+        <table>
+          <thead><tr><th>이름</th><th>부서</th><th>직군</th><th>교육명</th><th>수료일시</th><th>출석</th><th>설문</th></tr></thead>
+          <tbody id="compTableBody"><tr><td colspan="7" class="text-center text-gray-400 py-8">데이터 없음</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== QR ===================== -->
+  <div id="tab-qr" class="hidden">
+    <h2 class="text-xl font-bold mb-6">QR 코드 생성</h2>
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="card p-5">
+        <h3 class="font-bold mb-4">교육 선택</h3>
+        <div class="space-y-3" id="qrCourseList">
+          <p class="text-sm text-gray-400">교육 목록 로딩 중...</p>
+        </div>
+      </div>
+      <div class="card p-5 text-center" id="qrPreview">
+        <p class="text-sm text-gray-400 mb-4">교육을 선택하면 QR 코드가 생성됩니다</p>
+        <div id="qrCanvas" class="flex justify-center mb-4"></div>
+        <div id="qrInfo" class="hidden">
+          <p class="font-bold text-base mb-1" id="qrCourseName"></p>
+          <p class="text-sm text-gray-500 mb-4" id="qrAttTime"></p>
+          <button onclick="printQR()" class="btn btn-blue btn-lg w-full mb-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            QR 인쇄
+          </button>
+          <p class="text-xs text-gray-400" id="qrUrlText"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main content -->
+
+<!-- Course Modal -->
+<div id="courseModal" class="modal-overlay hidden">
+  <div class="modal-box p-6">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-xl font-bold" id="courseModalTitle">교육 추가</h2>
+      <button onclick="closeCourseModal()" class="p-2 rounded-lg hover:bg-gray-100">
+        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <input type="hidden" id="editCourseId" />
+    <div class="space-y-4">
+      <div>
+        <label class="form-label">교육명 *</label>
+        <input type="text" id="fTitle" class="form-input" placeholder="예: 감염관리 및 손위생 교육" />
+      </div>
+      <div>
+        <label class="form-label">설명</label>
+        <textarea id="fDesc" class="form-input" placeholder="교육 내용을 간략히 설명해 주세요"></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="form-label">날짜 *</label>
+          <input type="date" id="fDate" class="form-input" />
+        </div>
+        <div>
+          <label class="form-label">장소 *</label>
+          <input type="text" id="fLocation" class="form-input" placeholder="교육실" />
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-3">
+        <div>
+          <label class="form-label">시작시간</label>
+          <input type="time" id="fStartTime" class="form-input" />
+        </div>
+        <div>
+          <label class="form-label">종료시간</label>
+          <input type="time" id="fEndTime" class="form-input" />
+        </div>
+        <div>
+          <label class="form-label">정원</label>
+          <input type="number" id="fCapacity" class="form-input" value="30" min="1" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="form-label">출석 시작</label>
+          <input type="datetime-local" id="fAttStart" class="form-input" />
+        </div>
+        <div>
+          <label class="form-label">출석 종료</label>
+          <input type="datetime-local" id="fAttEnd" class="form-input" />
+        </div>
+      </div>
+      <div>
+        <label class="form-label">영상 URL (YouTube 또는 Google Drive)</label>
+        <input type="url" id="fVideoUrl" class="form-input" placeholder="https://youtube.com/... 또는 https://drive.google.com/..." />
+      </div>
+      <div>
+        <label class="form-label">교육자료 URL (Google Drive PDF)</label>
+        <input type="url" id="fMaterialUrl" class="form-input" placeholder="https://drive.google.com/..." />
+      </div>
+      <div>
+        <label class="form-label">설문 URL (Google Forms)</label>
+        <input type="url" id="fSurveyUrl" class="form-input" placeholder="https://forms.gle/..." />
+      </div>
+    </div>
+    <div id="courseModalMsg" class="mt-3 p-3 rounded-xl text-sm hidden"></div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="closeCourseModal()" class="btn btn-ghost flex-1">취소</button>
+      <button onclick="saveCourse()" id="saveCourseBtn" class="btn btn-blue flex-1">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- QR Print Modal -->
+<div id="printModal" class="modal-overlay hidden">
+  <div class="qr-modal-box p-8 text-center" id="printContent">
+    <img src="assets/images/logo.png" alt="푸르메재단" class="h-10 mx-auto mb-4" onerror="this.style.display='none'" />
+    <p class="text-xs text-gray-500 mb-1">푸르메재단 넥슨어린이재활병원 재활치료센터</p>
+    <h2 class="text-2xl font-bold mb-2" id="printCourseName" style="font-family:'Noto Serif KR',serif;"></h2>
+    <p class="text-sm text-gray-600 mb-6" id="printAttTime"></p>
+    <div id="printQrCanvas" class="flex justify-center mb-4"></div>
+    <p class="text-sm text-gray-700 font-semibold mb-1">QR을 스캔하여 출석을 확인하세요</p>
+    <p class="text-xs text-gray-400" id="printUrl"></p>
+    <div class="mt-6 flex gap-3 justify-center">
+      <button onclick="window.print()" class="btn btn-blue">인쇄</button>
+      <button onclick="document.getElementById('printModal').classList.add('hidden')" class="btn btn-ghost">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_URL = window.EDU_CONFIG?.API_URL || '';
+let allCourses = [];
+let editingCourseId = null;
+let currentQRUrl = '';
+let currentQRCourse = null;
+
+// Tab navigation
+function showTab(name) {
+  document.querySelectorAll('[id^="tab-"]').forEach(t => t.classList.add('hidden'));
+  document.getElementById('tab-' + name).classList.remove('hidden');
+  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll(`[onclick*="showTab('${name}')"]`).forEach(el => el.classList.add('active'));
+
+  // Load data on tab switch
+  const loaders = { dashboard: loadDashboard, courses: loadCoursesTable, registrations: loadRegistrations, attendance: loadAttendance, completions: loadCompletions, qr: loadQRList };
+  loaders[name]?.();
+}
+
+// === INIT ===
+async function initSheets() {
+  if (!confirm('스프레드시트 시트를 초기화하시겠습니까?')) return;
+  try {
+    const res = await fetch(`${API_URL}?action=initSheets`);
+    const data = await res.json();
+    alert(data.success ? '✅ ' + data.message : '❌ ' + data.error);
+    loadDashboard();
+  } catch { alert('오류가 발생했습니다.'); }
+}
+
+// === DASHBOARD ===
+async function loadDashboard() {
+  try {
+    const [dashRes, courseRes] = await Promise.all([
+      fetch(`${API_URL}?action=getDashboard`),
+      fetch(`${API_URL}?action=getCourses`)
+    ]);
+    const dash = await dashRes.json();
+    const courses = await courseRes.json();
+
+    if (dash.success) {
+      document.getElementById('statReg').textContent = dash.data.totalRegistrations;
+      document.getElementById('statAtt').textContent = dash.data.totalAttendance;
+      document.getElementById('statSurvey').textContent = dash.data.totalSurveys;
+      document.getElementById('statRate').textContent = dash.data.completionRate;
+    }
+
+    if (courses.success) {
+      allCourses = courses.data;
+      renderDashboardTable(courses.data);
+      populateCourseFilters(courses.data);
+    }
+  } catch (e) {
+    document.getElementById('dashboardTable').innerHTML = '<p class="text-sm text-red-500 py-4 text-center">API URL을 설정해 주세요 (config.js)</p>';
+  }
+}
+
+async function renderDashboardTable(courses) {
+  const rows = await Promise.all(courses.map(async c => {
+    const [attRes, compRes] = await Promise.all([
+      fetch(`${API_URL}?action=getAttendance&courseId=${c['교육ID']}`),
+      fetch(`${API_URL}?action=getCompletions&courseId=${c['교육ID']}`)
+    ]);
+    const att = await attRes.json();
+    const comp = await compRes.json();
+    const attCount = att.success ? att.data.length : 0;
+    const compCount = comp.success ? comp.data.length : 0;
+    const reg = parseInt(c['신청수']) || 0;
+    const rate = reg > 0 ? Math.round(compCount/reg*100) : 0;
+    return `<tr>
+      <td class="font-medium">${c['교육명']}</td>
+      <td>${c['날짜']}</td>
+      <td class="text-blue-700 font-semibold">${reg}</td>
+      <td class="text-teal-600 font-semibold">${attCount}</td>
+      <td class="text-green-600 font-semibold">${compCount}</td>
+      <td>
+        <div class="flex items-center gap-2">
+          <div class="flex-1 h-1.5 bg-gray-100 rounded-full"><div class="h-full bg-blue-500 rounded-full" style="width:${rate}%"></div></div>
+          <span class="text-xs font-semibold text-gray-600">${rate}%</span>
+        </div>
+      </td>
+    </tr>`;
+  }));
+
+  document.getElementById('dashboardTable').innerHTML = `
+    <table>
+      <thead><tr><th>교육명</th><th>날짜</th><th>신청</th><th>출석</th><th>수료</th><th>수료율</th></tr></thead>
+      <tbody>${rows.join('') || '<tr><td colspan="6" class="text-center text-gray-400 py-6">데이터 없음</td></tr>'}</tbody>
+    </table>`;
+}
+
+// === COURSES ===
+async function loadCoursesTable() {
+  try {
+    const res = await fetch(`${API_URL}?action=getCourses`);
+    const data = await res.json();
+    if (!data.success) return;
+    allCourses = data.data;
+    populateCourseFilters(data.data);
+
+    const statusColor = { '신청가능': 'bg-green-100 text-green-700', '마감': 'bg-red-100 text-red-600', '종료': 'bg-gray-100 text-gray-500' };
+    const rows = data.data.map(c => `<tr>
+      <td class="font-medium max-w-xs"><div class="truncate">${c['교육명']}</div></td>
+      <td>${c['날짜']}</td>
+      <td>${c['시작시간']}~${c['종료시간']}</td>
+      <td>${c['장소']}</td>
+      <td><span class="text-sm font-semibold">${c['신청수']}/${c['정원']}</span></td>
+      <td><span class="badge ${statusColor[c['상태']] || 'bg-gray-100 text-gray-600'}">${c['상태']}</span></td>
+      <td>
+        <div class="flex gap-2">
+          <button onclick="openEditModal('${c['교육ID']}')" class="btn btn-ghost text-xs py-1.5 px-2.5">수정</button>
+          <button onclick="deleteCourse('${c['교육ID']}')" class="btn btn-red text-xs py-1.5 px-2.5">삭제</button>
+        </div>
+      </td>
+    </tr>`).join('');
+
+    document.getElementById('coursesTableBody').innerHTML = rows || '<tr><td colspan="7" class="text-center text-gray-400 py-8">교육 없음</td></tr>';
+  } catch {}
+}
+
+// === REGISTRATIONS ===
+async function loadRegistrations() {
+  const courseId = document.getElementById('regCourseFilter').value;
+  const url = `${API_URL}?action=getRegistrations${courseId ? '&courseId='+courseId : ''}`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.success) return;
+    const statusColor = { '신청완료': 'bg-blue-100 text-blue-700', '취소': 'bg-gray-100 text-gray-400' };
+    const rows = data.data.map(r => `<tr>
+      <td class="font-medium">${r['이름']}</td>
+      <td>${r['부서']}</td>
+      <td>${r['직군']}</td>
+      <td>${r['연락처'] || '—'}</td>
+      <td class="text-xs text-gray-500">${r['신청일시']}</td>
+      <td><span class="badge ${statusColor[r['상태']] || 'bg-gray-100'}">${r['상태']}</span></td>
+    </tr>`).join('');
+    document.getElementById('regTableBody').innerHTML = rows || '<tr><td colspan="6" class="text-center text-gray-400 py-8">신청자 없음</td></tr>';
+  } catch {}
+}
+
+// === ATTENDANCE ===
+async function loadAttendance() {
+  const courseId = document.getElementById('attCourseFilter').value;
+  const url = `${API_URL}?action=getAttendance${courseId ? '&courseId='+courseId : ''}`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.success) return;
+    const rows = data.data.map(r => `<tr>
+      <td class="font-medium">${r['이름']}</td>
+      <td>${r['부서']}</td>
+      <td>${r['출석시간']}</td>
+      <td><span class="badge bg-teal-100 text-teal-700">${r['방법']}</span></td>
+    </tr>`).join('');
+    document.getElementById('attTableBody').innerHTML = rows || '<tr><td colspan="4" class="text-center text-gray-400 py-8">출석 기록 없음</td></tr>';
+  } catch {}
+}
+
+// === COMPLETIONS ===
+async function loadCompletions() {
+  const courseId = document.getElementById('compCourseFilter').value;
+  const url = `${API_URL}?action=getCompletions${courseId ? '&courseId='+courseId : ''}`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.success) return;
+    const rows = data.data.map(r => `<tr>
+      <td class="font-medium">${r['이름']}</td>
+      <td>${r['부서']}</td>
+      <td>${r['직군'] || '—'}</td>
+      <td class="text-sm">${r['교육명']}</td>
+      <td class="text-xs text-gray-500">${r['수료일시']}</td>
+      <td>${r['출석여부'] ? '<span class="badge bg-teal-100 text-teal-700">✓</span>' : '<span class="badge bg-red-100 text-red-500">✗</span>'}</td>
+      <td>${r['설문여부'] ? '<span class="badge bg-green-100 text-green-700">✓</span>' : '<span class="badge bg-red-100 text-red-500">✗</span>'}</td>
+    </tr>`).join('');
+    document.getElementById('compTableBody').innerHTML = rows || '<tr><td colspan="7" class="text-center text-gray-400 py-8">수료자 없음</td></tr>';
+  } catch {}
+}
+
+// === QR ===
+async function loadQRList() {
+  try {
+    const res = await fetch(`${API_URL}?action=getCourses`);
+    const data = await res.json();
+    if (!data.success) return;
+    allCourses = data.data;
+    const items = data.data.map(c => `
+      <button onclick="generateQR('${c['교육ID']}')" class="w-full text-left p-3 rounded-xl border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all">
+        <p class="font-semibold text-sm">${c['교육명']}</p>
+        <p class="text-xs text-gray-500 mt-0.5">${c['날짜']} ${c['시작시간']}</p>
+      </button>`).join('');
+    document.getElementById('qrCourseList').innerHTML = items || '<p class="text-sm text-gray-400">교육 없음</p>';
+  } catch {}
+}
+
+function generateQR(courseId) {
+  const course = allCourses.find(c => c['교육ID'] === courseId);
+  if (!course) return;
+  currentQRCourse = course;
+  const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', 'attendance.html');
+  currentQRUrl = `${baseUrl}?id=${courseId}`;
+
+  document.getElementById('qrCanvas').innerHTML = '';
+  new QRCode(document.getElementById('qrCanvas'), {
+    text: currentQRUrl, width: 200, height: 200,
+    colorDark: '#0A4FA3', colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H
+  });
+
+  document.getElementById('qrCourseName').textContent = course['교육명'];
+  document.getElementById('qrAttTime').textContent = course['출석시작']
+    ? `출석 시간: ${course['출석시작']} ~ ${course['출석종료']}`
+    : '출석 시간 제한 없음';
+  document.getElementById('qrUrlText').textContent = currentQRUrl;
+  document.getElementById('qrInfo').classList.remove('hidden');
+}
+
+function printQR() {
+  if (!currentQRCourse) return;
+  const course = currentQRCourse;
+  document.getElementById('printCourseName').textContent = course['교육명'];
+  document.getElementById('printAttTime').textContent = course['출석시작']
+    ? `출석 가능: ${course['출석시작']} ~ ${course['출석종료']}`
+    : '날짜: ' + course['날짜'];
+  document.getElementById('printUrl').textContent = currentQRUrl;
+  document.getElementById('printQrCanvas').innerHTML = '';
+  new QRCode(document.getElementById('printQrCanvas'), {
+    text: currentQRUrl, width: 240, height: 240,
+    colorDark: '#0A4FA3', colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H
+  });
+  document.getElementById('printModal').classList.remove('hidden');
+}
+
+// === COURSE CRUD ===
+function openCourseModal(courseId = null) {
+  editingCourseId = courseId;
+  document.getElementById('courseModalTitle').textContent = courseId ? '교육 수정' : '교육 추가';
+  document.getElementById('courseModalMsg').classList.add('hidden');
+
+  if (courseId) {
+    const c = allCourses.find(x => x['교육ID'] === courseId);
+    if (!c) return;
+    document.getElementById('fTitle').value = c['교육명'] || '';
+    document.getElementById('fDesc').value = c['설명'] || '';
+    document.getElementById('fDate').value = c['날짜'] || '';
+    document.getElementById('fLocation').value = c['장소'] || '';
+    document.getElementById('fStartTime').value = c['시작시간'] || '';
+    document.getElementById('fEndTime').value = c['종료시간'] || '';
+    document.getElementById('fCapacity').value = c['정원'] || 30;
+    document.getElementById('fAttStart').value = c['출석시작'] ? c['출석시작'].replace(' ', 'T') : '';
+    document.getElementById('fAttEnd').value = c['출석종료'] ? c['출석종료'].replace(' ', 'T') : '';
+    document.getElementById('fVideoUrl').value = c['영상URL'] || '';
+    document.getElementById('fMaterialUrl').value = c['자료URL'] || '';
+    document.getElementById('fSurveyUrl').value = c['설문URL'] || '';
+  } else {
+    ['fTitle','fDesc','fDate','fLocation','fStartTime','fEndTime','fVideoUrl','fMaterialUrl','fSurveyUrl','fAttStart','fAttEnd'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('fCapacity').value = 30;
+  }
+  document.getElementById('courseModal').classList.remove('hidden');
+}
+
+function openEditModal(courseId) { openCourseModal(courseId); }
+function closeCourseModal() { document.getElementById('courseModal').classList.add('hidden'); }
+
+async function saveCourse() {
+  const title = document.getElementById('fTitle').value.trim();
+  const date = document.getElementById('fDate').value;
+  const location = document.getElementById('fLocation').value.trim();
+  if (!title || !date || !location) {
+    showCourseMsg('교육명, 날짜, 장소는 필수입니다.', 'error');
+    return;
+  }
+
+  const attStart = document.getElementById('fAttStart').value.replace('T',' ');
+  const attEnd = document.getElementById('fAttEnd').value.replace('T',' ');
+
+  const params = {
+    action: editingCourseId ? 'updateCourse' : 'createCourse',
+    courseId: editingCourseId,
+    title, date, location,
+    description: document.getElementById('fDesc').value,
+    startTime: document.getElementById('fStartTime').value,
+    endTime: document.getElementById('fEndTime').value,
+    capacity: document.getElementById('fCapacity').value,
+    attendanceStart: attStart,
+    attendanceEnd: attEnd,
+    videoUrl: document.getElementById('fVideoUrl').value,
+    materialUrl: document.getElementById('fMaterialUrl').value,
+    surveyUrl: document.getElementById('fSurveyUrl').value,
+  };
+
+  const btn = document.getElementById('saveCourseBtn');
+  btn.disabled = true; btn.textContent = '저장 중...';
+
+  try {
+    const res = await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(params) });
+    const data = await res.json();
+    if (data.success) {
+      showCourseMsg('✅ ' + data.message, 'success');
+      setTimeout(() => { closeCourseModal(); loadCoursesTable(); }, 1200);
+    } else {
+      showCourseMsg(data.error, 'error');
+    }
+  } catch { showCourseMsg('오류가 발생했습니다.', 'error'); }
+  finally { btn.disabled = false; btn.textContent = '저장'; }
+}
+
+async function deleteCourse(courseId) {
+  if (!confirm('이 교육을 삭제하시겠습니까?')) return;
+  try {
+    const res = await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ action: 'deleteCourse', courseId }) });
+    const data = await res.json();
+    if (data.success) loadCoursesTable();
+    else alert(data.error);
+  } catch {}
+}
+
+function showCourseMsg(msg, type) {
+  const el = document.getElementById('courseModalMsg');
+  el.className = `mt-3 p-3 rounded-xl text-sm ${type === 'error' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-700'}`;
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+function populateCourseFilters(courses) {
+  const opts = courses.map(c => `<option value="${c['교육ID']}">${c['교육명']}</option>`).join('');
+  ['regCourseFilter','attCourseFilter','compCourseFilter'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<option value="">전체 교육</option>' + opts;
+  });
+}
+
+// Modal backdrop
+document.getElementById('courseModal').addEventListener('click', function(e) {
+  if (e.target === this) closeCourseModal();
+});
+
+// Init
+loadDashboard();
+</script>
+</body>
+</html>
