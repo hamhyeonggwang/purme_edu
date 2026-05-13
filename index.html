@@ -439,21 +439,28 @@ let courses = [], curId = null;
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const today = () => new Date().toISOString().split('T')[0];
-const isDateValue = v => /^\d{4}-\d{2}-\d{2}$/.test(String(v || ''));
+const dateKey = v => {
+  const m = String(v || '').trim().match(/^(\d{4})[-.](\d{1,2})[-.](\d{1,2})$/);
+  return m ? `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}` : '';
+};
+const isDateValue = v => !!dateKey(v);
+const isEndedCourse = c => ['종료', '완료'].includes(String(c['상태'] || '').trim());
 const sameId = (a, b) => String(a).trim() === String(b).trim();
 
 function pillClass(c) {
   const t = today(), f = +c['신청수']||0, cap = +c['정원']||30;
-  if(c['날짜']<t || c['상태']==='종료') return 'ended';
+  const d = dateKey(c['날짜']);
+  if((d && d<t) || isEndedCourse(c)) return 'ended';
   if(f>=cap) return 'full';
-  if(c['날짜']===t) return 'today2';
+  if(d===t) return 'today2';
   return 'open';
 }
 const pillLabel = { ended:'종료', full:'정원마감', today2:'오늘교육', open:'신청가능' };
 
 function canReg(c) {
   const t = today(), f = +c['신청수']||0, cap = +c['정원']||30;
-  return c['날짜']>=t && c['상태']!=='종료' && f<cap;
+  const d = dateKey(c['날짜']);
+  return (!d || d>=t) && !isEndedCourse(c) && f<cap;
 }
 
 function pColor(pct) {
@@ -464,7 +471,7 @@ function card(c, i) {
   const id = c['교육ID'], f = +c['신청수']||0, cap = +c['정원']||30;
   const pct = Math.min(100,Math.round(f/cap*100));
   const t = today();
-  const stripe = c['날짜']===t?'s-blue':pct>=70?'s-orange':'s-gray';
+  const stripe = dateKey(c['날짜'])===t?'s-blue':pct>=70?'s-orange':'s-gray';
   const pc = pillClass(c), ok = canReg(c);
   return `
   <div class="c-card" style="animation-delay:${i*0.06}s">
@@ -493,8 +500,9 @@ function card(c, i) {
 }
 
 function upcRow(c, i) {
-  const hasDate = isDateValue(c['날짜']);
-  const [,m,d] = hasDate ? c['날짜'].split('-') : ['', '', ''];
+  const normalizedDate = dateKey(c['날짜']);
+  const hasDate = !!normalizedDate;
+  const [,m,d] = hasDate ? normalizedDate.split('-') : ['', '', ''];
   const f=+c['신청수']||0, cap=+c['정원']||30, ok=canReg(c);
   return `
   <div class="upc-item" style="animation-delay:${i*0.055}s">
@@ -508,8 +516,9 @@ function upcRow(c, i) {
 }
 
 function pastRow(c, i) {
-  const hasDate = isDateValue(c['날짜']);
-  const [,m,d] = hasDate ? c['날짜'].split('-') : ['', '', ''];
+  const normalizedDate = dateKey(c['날짜']);
+  const hasDate = !!normalizedDate;
+  const [,m,d] = hasDate ? normalizedDate.split('-') : ['', '', ''];
   const f=+c['신청수']||0, cap=+c['정원']||30;
   return `
   <div class="upc-item" style="animation-delay:${i*0.055}s;opacity:0.82;">
@@ -529,9 +538,9 @@ async function load() {
     if(!data.success) throw new Error();
     courses = data.data;
     const t = today();
-    const todayC = courses.filter(c=>c['날짜']===t);
-    const upc    = courses.filter(c=>!isDateValue(c['날짜']) || c['날짜']>t);
-    const past   = courses.filter(c=>isDateValue(c['날짜']) && c['날짜']<t).reverse();
+    const todayC = courses.filter(c=>dateKey(c['날짜'])===t && !isEndedCourse(c));
+    const past   = courses.filter(c=>(dateKey(c['날짜']) && dateKey(c['날짜'])<t) || isEndedCourse(c)).reverse();
+    const upc    = courses.filter(c=>!todayC.includes(c) && !past.includes(c));
 
     // Banner
     if(todayC.length) {
