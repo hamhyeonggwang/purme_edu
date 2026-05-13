@@ -140,8 +140,9 @@
   <div class="sb-notice" style="margin-bottom:14px;">
     <div class="sb-ni">
       <div class="sb-nh"><span class="sb-nt">공지사항</span></div>
-      <div class="sb-nitem">2025년 신규입사자 연간교육 일정 안내</div>
-      <div class="sb-nitem">사용 가능한 브라우저 안내</div>
+      <div id="noticeList">
+        <div class="sb-nitem">공지사항을 불러오는 중...</div>
+      </div>
     </div>
   </div>
   <div class="sb-bot">
@@ -256,6 +257,22 @@ async function loadCourse() {
   } catch {}
 }
 
+async function loadNotices() {
+  try {
+    const r = await fetch(`${API_URL}?action=getNotices`);
+    const d = await r.json();
+    if (!d.success) throw new Error();
+    const notices = d.data || [];
+    document.getElementById('noticeList').innerHTML = notices.length
+      ? notices.map(n => n['링크URL']
+        ? `<a class="sb-nitem" href="${n['링크URL']}" target="_blank" rel="noopener">${n['내용']}</a>`
+        : `<div class="sb-nitem">${n['내용']}</div>`).join('')
+      : '<div class="sb-nitem">등록된 공지사항이 없습니다</div>';
+  } catch {
+    document.getElementById('noticeList').innerHTML = '<div class="sb-nitem">공지사항을 불러올 수 없습니다</div>';
+  }
+}
+
 async function submit() {
   const name = document.getElementById('aName').value.trim();
   const dept = document.getElementById('aDept').value;
@@ -292,6 +309,7 @@ function showM(msg, type) {
 }
 
 loadCourse();
+loadNotices();
 </script>
 </body>
 </html>

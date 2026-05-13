@@ -9,7 +9,8 @@ const SHEETS = {
   REGISTRATIONS: '신청자',
   ATTENDANCE: '출석',
   SURVEYS: '설문완료',
-  COMPLETIONS: '수료현황'
+  COMPLETIONS: '수료현황',
+  NOTICES: '공지사항'
 };
 
 // ============================================================
@@ -42,6 +43,10 @@ function handleRequest(e) {
       case 'getRegistrations':  result = getRegistrations(params); break;
       case 'getAttendance':     result = getAttendanceList(params); break;
       case 'getCompletions':    result = getCompletions(params); break;
+      case 'getNotices':        result = getNotices(params); break;
+      case 'createNotice':      result = createNotice(params); break;
+      case 'updateNotice':      result = updateNotice(params); break;
+      case 'deleteNotice':      result = deleteNotice(params); break;
       case 'createCourse':      result = createCourse(params); break;
       case 'updateCourse':      result = updateCourse(params); break;
       case 'deleteCourse':      result = deleteCourse(params); break;
@@ -86,6 +91,10 @@ function initializeSheets() {
     {
       name: SHEETS.COMPLETIONS,
       headers: ['수료ID', '교육ID', '교육명', '이름', '부서', '직군', '수료일시', '출석여부', '설문여부']
+    },
+    {
+      name: SHEETS.NOTICES,
+      headers: ['공지ID', '내용', '링크URL', '상태', '생성일']
     }
   ];
 
@@ -133,6 +142,15 @@ function addSampleData(ss) {
 
     samples.forEach(row => courseSheet.appendRow(row));
   }
+
+  const noticeSheet = ss.getSheetByName(SHEETS.NOTICES);
+  if (noticeSheet && noticeSheet.getLastRow() <= 1) {
+    const now = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss');
+    [
+      [generateId('N'), '2025년 신규입사자 연간교육 일정 안내', '', '게시', now],
+      [generateId('N'), '사용 가능한 브라우저 안내', '', '게시', now]
+    ].forEach(row => noticeSheet.appendRow(row));
+  }
 }
 
 // ============================================================
@@ -157,15 +175,23 @@ function getCourses(params) {
     return { success: true, data: courses.filter(c => c['날짜'] === params.date) };
   }
 
-  // 오늘 이후 교육만
   const today = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
-  const upcoming = courses.filter(c => c['날짜'] >= today);
-  upcoming.sort((a, b) => {
-    if (a['날짜'] !== b['날짜']) return a['날짜'].localeCompare(b['날짜']);
-    return a['시작시간'].localeCompare(b['시작시간']);
-  });
+  const includePast = params.includePast && params.includePast !== '0' && params.includePast !== 'false';
+  const upcoming = includePast ? courses : courses.filter(c => c['날짜'] >= today);
+  upcoming.sort(compareCoursesByDate);
 
   return { success: true, data: upcoming };
+}
+
+function compareCoursesByDate(a, b) {
+  const aDate = String(a['날짜'] || '');
+  const bDate = String(b['날짜'] || '');
+  const aIsDate = /^\d{4}-\d{2}-\d{2}$/.test(aDate);
+  const bIsDate = /^\d{4}-\d{2}-\d{2}$/.test(bDate);
+
+  if (aIsDate && bIsDate && aDate !== bDate) return aDate.localeCompare(bDate);
+  if (aIsDate !== bIsDate) return aIsDate ? -1 : 1;
+  return String(a['시작시간'] || '').localeCompare(String(b['시작시간'] || ''));
 }
 
 function normalizeSheetValue(header, value) {
@@ -180,6 +206,12 @@ function normalizeSheetValue(header, value) {
       return Utilities.formatDate(value, 'Asia/Seoul', 'yyyy-MM-dd HH:mm');
     }
     return Utilities.formatDate(value, 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss');
+  }
+  if (header === '날짜') {
+    const match = String(value || '').trim().match(/^(\d{4})[-.](\d{1,2})[-.](\d{1,2})$/);
+    if (match) {
+      return `${match[1]}-${match[2].padStart(2, '0')}-${match[3].padStart(2, '0')}`;
+    }
   }
   return value;
 }
@@ -355,7 +387,7 @@ function checkAttendance(params) {
   // 출석 저장
   const attId = generateId('A');
   const timeStr = Utilities.formatDate(now, 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss');
-  attSheet.appendRow([attId, params.courseId, params.name, params.department, timeStr, 'QR']);
+  attSheet.appendRow([attId, params.courseId, params.name, params.department, timeStr, '참가자 확인']);
 
   // 수료 체크
   checkCompletion(params.courseId, params.name, ss);
@@ -471,6 +503,98 @@ function getCompletions(params) {
 }
 
 // ============================================================
+// 공지사항 관련 함수
+// ============================================================
+function ensureNoticeSheet() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sheet = ss.getSheetByName(SHEETS.NOTICES);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEETS.NOTICES);
+    sheet.appendRow(['공지ID', '내용', '링크URL', '상태', '생성일']);
+    sheet.getRange(1, 1, 1, 5)
+      .setBackground('#1a5276')
+      .setFontColor('#ffffff')
+      .setFontWeight('bold');
+    sheet.setFrozenRows(1);
+    const now = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss');
+    sheet.appendRow([generateId('N'), '2025년 신규입사자 연간교육 일정 안내', '', '게시', now]);
+    sheet.appendRow([generateId('N'), '사용 가능한 브라우저 안내', '', '게시', now]);
+  }
+  return sheet;
+}
+
+function getNotices(params) {
+  const sheet = ensureNoticeSheet();
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return { success: true, data: [] };
+
+  const headers = data[0];
+  let notices = data.slice(1).map(row => {
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = normalizeSheetValue(h, row[i]));
+    return obj;
+  }).filter(n => n['상태'] !== '삭제');
+
+  if (!params.includeHidden) {
+    notices = notices.filter(n => n['상태'] === '게시');
+  }
+
+  return { success: true, data: notices };
+}
+
+function createNotice(params) {
+  const content = String(params.content || '').trim();
+  if (!content) return { success: false, error: '공지 내용을 입력해 주세요.' };
+
+  const sheet = ensureNoticeSheet();
+  const noticeId = generateId('N');
+  const now = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss');
+  sheet.appendRow([noticeId, content, params.linkUrl || '', params.status || '게시', now]);
+
+  return { success: true, noticeId, message: '공지사항이 등록되었습니다.' };
+}
+
+function updateNotice(params) {
+  const content = String(params.content || '').trim();
+  if (!content) return { success: false, error: '공지 내용을 입력해 주세요.' };
+
+  const sheet = ensureNoticeSheet();
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+
+  for (let i = 1; i < data.length; i++) {
+    if (isSameId(data[i][0], params.noticeId)) {
+      const updates = {
+        '내용': content,
+        '링크URL': params.linkUrl || '',
+        '상태': params.status || '게시'
+      };
+      Object.keys(updates).forEach(header => {
+        const colIdx = headers.indexOf(header);
+        if (colIdx >= 0) sheet.getRange(i + 1, colIdx + 1).setValue(updates[header]);
+      });
+      return { success: true, message: '공지사항이 수정되었습니다.' };
+    }
+  }
+  return { success: false, error: '공지사항을 찾을 수 없습니다.' };
+}
+
+function deleteNotice(params) {
+  const sheet = ensureNoticeSheet();
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+  const statusIdx = headers.indexOf('상태');
+
+  for (let i = 1; i < data.length; i++) {
+    if (isSameId(data[i][0], params.noticeId)) {
+      sheet.getRange(i + 1, statusIdx + 1).setValue('삭제');
+      return { success: true, message: '공지사항이 삭제되었습니다.' };
+    }
+  }
+  return { success: false, error: '공지사항을 찾을 수 없습니다.' };
+}
+
+// ============================================================
 // 대시보드
 // ============================================================
 function getDashboard(params) {
@@ -510,7 +634,7 @@ function getDashboard(params) {
 }
 
 // ============================================================
-// QR 데이터 생성
+// 참가자 확인 링크 데이터 생성
 // ============================================================
 function generateQRData(params) {
   const courseResult = getCourseById(params);

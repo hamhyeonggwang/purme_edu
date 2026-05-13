@@ -323,8 +323,9 @@
         <span class="sb-notice-title">공지사항</span>
         <svg width="13" height="13" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </div>
-      <div class="sb-notice-item">2025년 신규입사자 연간교육 일정 안내</div>
-      <div class="sb-notice-item">사용 가능한 브라우저 안내</div>
+      <div id="noticeList">
+        <div class="sb-notice-item">공지사항을 불러오는 중...</div>
+      </div>
     </div>
   </div>
 
@@ -585,6 +586,22 @@ async function load() {
   }
 }
 
+async function loadNotices() {
+  try {
+    const res = await fetch(`${API_URL}?action=getNotices`);
+    const data = await res.json();
+    if (!data.success) throw new Error();
+    const notices = data.data || [];
+    document.getElementById('noticeList').innerHTML = notices.length
+      ? notices.map(n => n['링크URL']
+        ? `<a class="sb-notice-item" href="${n['링크URL']}" target="_blank" rel="noopener">${n['내용']}</a>`
+        : `<div class="sb-notice-item">${n['내용']}</div>`).join('')
+      : '<div class="sb-notice-item">등록된 공지사항이 없습니다</div>';
+  } catch {
+    document.getElementById('noticeList').innerHTML = '<div class="sb-notice-item">공지사항을 불러올 수 없습니다</div>';
+  }
+}
+
 function openModal(id) {
   curId = id;
   const c = courses.find(x=>sameId(x['교육ID'], id));
@@ -618,6 +635,7 @@ function showM(id,msg,type){const el=document.getElementById(id);el.className='f
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
 
 load();
+loadNotices();
 </script>
 </body>
 </html>
