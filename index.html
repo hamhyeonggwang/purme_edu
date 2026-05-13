@@ -374,6 +374,13 @@
       <span class="sec-meta" id="upcCount">—</span>
     </div>
     <div id="upcList" class="upc-list"></div>
+
+    <!-- Past courses -->
+    <div class="sec-hd" style="margin-top:34px;">
+      <h2 class="sec-title">지난 <em>교육</em></h2>
+      <span class="sec-meta" id="pastCount">—</span>
+    </div>
+    <div id="pastList" class="upc-list"></div>
   </div>
 </div>
 
@@ -500,15 +507,31 @@ function upcRow(c, i) {
   </div>`;
 }
 
+function pastRow(c, i) {
+  const hasDate = isDateValue(c['날짜']);
+  const [,m,d] = hasDate ? c['날짜'].split('-') : ['', '', ''];
+  const f=+c['신청수']||0, cap=+c['정원']||30;
+  return `
+  <div class="upc-item" style="animation-delay:${i*0.055}s;opacity:0.82;">
+    <div class="upc-date" style="background:#F1F5F9;"><span class="upc-m" style="color:#64748B;">${hasDate ? MONTHS[+m-1] : 'TBD'}</span><span class="upc-d" style="color:#475569;">${hasDate ? d : '-'}</span></div>
+    <div class="upc-info">
+      <div class="upc-name">${c['교육명']}</div>
+      <div class="upc-sub">${c['시작시간']} ~ ${c['종료시간']} · ${c['장소']} · ${f}/${cap}명 · 종료</div>
+    </div>
+    <div class="upc-act">${c['영상URL']?`<button onclick="location.href='player.html?id=${c['교육ID']}'">영상</button>`:`<button class="dis" disabled>종료</button>`}</div>
+  </div>`;
+}
+
 async function load() {
   try {
-    const res = await fetch(`${API_URL}?action=getCourses`);
+    const res = await fetch(`${API_URL}?action=getCourses&includePast=1`);
     const data = await res.json();
     if(!data.success) throw new Error();
     courses = data.data;
     const t = today();
     const todayC = courses.filter(c=>c['날짜']===t);
     const upc    = courses.filter(c=>!isDateValue(c['날짜']) || c['날짜']>t);
+    const past   = courses.filter(c=>isDateValue(c['날짜']) && c['날짜']<t).reverse();
 
     // Banner
     if(todayC.length) {
@@ -541,6 +564,12 @@ async function load() {
     document.getElementById('upcList').innerHTML = upc.length
       ? upc.slice(0,8).map((c,i)=>upcRow(c,i)).join('')
       : `<div style="text-align:center;padding:30px;color:#94A3B8;font-size:0.83rem;">예정된 교육이 없습니다</div>`;
+
+    // Past
+    document.getElementById('pastCount').textContent = `총 ${past.length}개`;
+    document.getElementById('pastList').innerHTML = past.length
+      ? past.slice(0,8).map((c,i)=>pastRow(c,i)).join('')
+      : `<div style="text-align:center;padding:30px;color:#94A3B8;font-size:0.83rem;">지난 교육이 없습니다</div>`;
 
   } catch {
     document.getElementById('todayGrid').innerHTML = `<div class="empty" style="grid-column:1/-1;"><div class="empty-ico"><svg width="24" height="24" fill="none" stroke="#EF4444" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><p style="font-weight:700;color:#DC2626;margin-bottom:5px;">데이터를 불러올 수 없습니다</p><p style="font-size:0.8rem;color:#94A3B8;">config.js의 API URL을 확인해 주세요</p><button onclick="load()" style="margin-top:12px;background:#EFF6FF;color:#1D4ED8;border:1.5px solid #BFDBFE;border-radius:8px;padding:7px 16px;font-size:0.8rem;font-weight:700;cursor:pointer;font-family:inherit;">다시 시도</button></div>`;
