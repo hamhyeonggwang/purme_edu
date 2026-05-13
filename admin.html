@@ -99,7 +99,7 @@
     </div>
     <div class="sidebar-link" onclick="showTab('qr')">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>
-      QR 생성
+      참가자 확인
     </div>
   </nav>
   <div class="pt-4 border-t border-white/10">
@@ -120,7 +120,7 @@
     <div class="tab whitespace-nowrap" onclick="showTab('registrations')">신청</div>
     <div class="tab whitespace-nowrap" onclick="showTab('attendance')">출석</div>
     <div class="tab whitespace-nowrap" onclick="showTab('completions')">수료</div>
-    <div class="tab whitespace-nowrap" onclick="showTab('qr')">QR</div>
+    <div class="tab whitespace-nowrap" onclick="showTab('qr')">참가자 확인</div>
   </div>
 
   <!-- ===================== DASHBOARD ===================== -->
@@ -251,9 +251,9 @@
     </div>
   </div>
 
-  <!-- ===================== QR ===================== -->
+  <!-- ===================== 참가자 확인 ===================== -->
   <div id="tab-qr" class="hidden">
-    <h2 class="text-xl font-bold mb-6">QR 코드 생성</h2>
+    <h2 class="text-xl font-bold mb-6">참가자 확인 링크</h2>
     <div class="grid md:grid-cols-2 gap-6">
       <div class="card p-5">
         <h3 class="font-bold mb-4">교육 선택</h3>
@@ -262,14 +262,14 @@
         </div>
       </div>
       <div class="card p-5 text-center" id="qrPreview">
-        <p class="text-sm text-gray-400 mb-4">교육을 선택하면 QR 코드가 생성됩니다</p>
+        <p class="text-sm text-gray-400 mb-4">교육을 선택하면 참가자 확인 링크가 생성됩니다</p>
         <div id="qrCanvas" class="flex justify-center mb-4"></div>
         <div id="qrInfo" class="hidden">
           <p class="font-bold text-base mb-1" id="qrCourseName"></p>
           <p class="text-sm text-gray-500 mb-4" id="qrAttTime"></p>
           <button onclick="printQR()" class="btn btn-blue btn-lg w-full mb-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-            QR 인쇄
+            확인 안내 인쇄
           </button>
           <p class="text-xs text-gray-400" id="qrUrlText"></p>
         </div>
@@ -353,7 +353,7 @@
   </div>
 </div>
 
-<!-- QR Print Modal -->
+<!-- 참가자 확인 안내 Print Modal -->
 <div id="printModal" class="modal-overlay hidden">
   <div class="qr-modal-box p-8 text-center" id="printContent">
     <img src="assets/images/logo.png" alt="푸르메재단" class="h-10 mx-auto mb-4" onerror="this.style.display='none'" />
@@ -361,7 +361,7 @@
     <h2 class="text-2xl font-bold mb-2" id="printCourseName" style="font-family:'Noto Serif KR',serif;"></h2>
     <p class="text-sm text-gray-600 mb-6" id="printAttTime"></p>
     <div id="printQrCanvas" class="flex justify-center mb-4"></div>
-    <p class="text-sm text-gray-700 font-semibold mb-1">QR을 스캔하여 출석을 확인하세요</p>
+    <p class="text-sm text-gray-700 font-semibold mb-1">아래 링크로 참가자 확인을 진행하세요</p>
     <p class="text-xs text-gray-400" id="printUrl"></p>
     <div class="mt-6 flex gap-3 justify-center">
       <button onclick="window.print()" class="btn btn-blue">인쇄</button>
@@ -377,6 +377,7 @@ let allCourses = [];
 let editingCourseId = null;
 let currentQRUrl = '';
 let currentQRCourse = null;
+const sameId = (a, b) => String(a).trim() === String(b).trim();
 
 // Tab navigation
 function showTab(name) {
@@ -552,7 +553,7 @@ async function loadCompletions() {
   } catch {}
 }
 
-// === QR ===
+// === 참가자 확인 ===
 async function loadQRList() {
   try {
     const res = await fetch(`${API_URL}?action=getCourses`);
@@ -569,7 +570,7 @@ async function loadQRList() {
 }
 
 function generateQR(courseId) {
-  const course = allCourses.find(c => c['교육ID'] === courseId);
+  const course = allCourses.find(c => sameId(c['교육ID'], courseId));
   if (!course) return;
   currentQRCourse = course;
   const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', 'attendance.html');
@@ -614,7 +615,7 @@ function openCourseModal(courseId = null) {
   document.getElementById('courseModalMsg').classList.add('hidden');
 
   if (courseId) {
-    const c = allCourses.find(x => x['교육ID'] === courseId);
+    const c = allCourses.find(x => sameId(x['교육ID'], courseId));
     if (!c) return;
     document.getElementById('fTitle').value = c['교육명'] || '';
     document.getElementById('fDesc').value = c['설명'] || '';

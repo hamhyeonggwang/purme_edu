@@ -312,7 +312,7 @@
     </a>
     <a class="sb-link" href="attendance.html">
       <div class="sb-icon"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
-      QR 출석
+      참가자 확인
     </a>
 
     <div class="sb-sec">학습 지원</div>
@@ -443,6 +443,7 @@ let courses = [], curId = null;
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const today = () => new Date().toISOString().split('T')[0];
 const isDateValue = v => /^\d{4}-\d{2}-\d{2}$/.test(String(v || ''));
+const sameId = (a, b) => String(a).trim() === String(b).trim();
 
 function pillClass(c) {
   const t = today(), f = +c['신청수']||0, cap = +c['정원']||30;
@@ -487,7 +488,7 @@ function card(c, i) {
       </div>
       <div class="c-actions">
         <button onclick="openModal('${id}')" class="c-btn pr" ${!ok?'disabled':''}><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>${ok?'신청하기':'마감'}</button>
-        <a href="attendance.html?id=${id}" class="c-btn tl"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>QR 출석</a>
+        <a href="attendance.html?id=${id}" class="c-btn tl"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>참가자 확인</a>
         ${c['영상URL']?`<a href="player.html?id=${id}" class="c-btn sc"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>영상</a>`:''}
       </div>
     </div>
@@ -558,7 +559,7 @@ async function load() {
 
 function openModal(id) {
   curId = id;
-  const c = courses.find(x=>x['교육ID']===id);
+  const c = courses.find(x=>sameId(x['교육ID'], id));
   if(!c) return;
   document.getElementById('mCourse').textContent = c['교육명'];
   ['rName','rPhone'].forEach(i=>document.getElementById(i).value='');
