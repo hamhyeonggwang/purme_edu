@@ -249,7 +249,6 @@ function requireAuth(params) {
 
       return { success: true, auth: toAuthProfile(employee.data) };
     }
-  }
 
   return { success: false, error: '유효하지 않은 로그인입니다.', code: 'UNAUTHORIZED' };
 }
