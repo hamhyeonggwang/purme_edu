@@ -41,6 +41,19 @@
     return action === 'login';
   }
 
+  function normalizeAppsScriptPost(url, init) {
+    const nextInit = init ? { ...init } : undefined;
+    if (!nextInit || !isApiRequest(url)) return nextInit;
+
+    const method = String(nextInit.method || 'GET').toUpperCase();
+    if (method !== 'POST' || typeof nextInit.body !== 'string') return nextInit;
+
+    // Apps Script web apps can reject JSON preflight requests. Sending a JSON
+    // string as text/plain keeps the request simple while Code.gs still parses it.
+    nextInit.headers = { ...(nextInit.headers || {}), 'Content-Type': 'text/plain;charset=utf-8' };
+    return nextInit;
+  }
+
   function redirectToLogin() {
     const returnTo = encodeURIComponent(location.pathname.split('/').pop() + location.search);
     location.href = `login.html?returnTo=${returnTo}`;
@@ -72,13 +85,14 @@
       }
     }
 
+    nextInit = normalizeAppsScriptPost(url, nextInit);
     return originalFetch(url, nextInit);
   }
 
   async function login(employeeNo, pin) {
     const res = await originalFetch(apiUrl(), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'login', employeeNo, pin })
     });
     const data = await res.json();
