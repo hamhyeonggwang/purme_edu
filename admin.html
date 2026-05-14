@@ -8,14 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="assets/js/config.js"></script>
-  <script>
-    const adminPassword = 'purme2026';
-    const enteredPassword = prompt('관리자 비밀번호를 입력하세요');
-    if (enteredPassword !== adminPassword) {
-      alert('비밀번호가 올바르지 않습니다.');
-      location.href = 'index.html';
-    }
-  </script>
+  <script src="assets/js/auth.js"></script>
   <style>
     :root {
       --blue: #0A4FA3;
@@ -131,8 +124,14 @@
   <!-- ===================== DASHBOARD ===================== -->
   <div id="tab-dashboard">
     <div class="flex items-center justify-between mb-6">
-      <h2 class="text-xl font-bold">대시보드</h2>
-      <button onclick="initSheets()" class="btn btn-ghost text-xs">시트 초기화</button>
+      <div>
+        <h2 class="text-xl font-bold">대시보드</h2>
+        <p id="adminUser" class="text-xs text-gray-400 mt-1">관리자 확인 중...</p>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="initSheets()" class="btn btn-ghost text-xs">시트 초기화</button>
+        <button onclick="EDU_AUTH.logout()" class="btn btn-ghost text-xs">로그아웃</button>
+      </div>
     </div>
 
     <!-- Stat Cards -->
@@ -861,7 +860,14 @@ document.getElementById('courseModal').addEventListener('click', function(e) {
 });
 
 // Init
-loadDashboard();
+async function boot() {
+  const user = await EDU_AUTH.requireAuth({ admin: true });
+  if (!user) return;
+  document.getElementById('adminUser').textContent = `${user.name}님 관리자 계정`;
+  loadDashboard();
+}
+
+boot();
 </script>
 </body>
 </html>

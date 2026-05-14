@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <script src="assets/js/config.js"></script>
+  <script src="assets/js/auth.js"></script>
   <style>
     :root {
       --navy:#0B1F4B; --blue:#1A4FA8; --blue-b:#2563EB; --teal:#0891B2;
@@ -191,15 +192,8 @@
           <div class="step-badge">1</div>
           <div class="step-text">본인 정보를 입력하세요</div>
         </div>
-        <div class="fg"><label class="fl">이름 *</label><input type="text" id="aName" class="fi" placeholder="홍길동" autocomplete="name" /></div>
-        <div class="fg">
-          <label class="fl">부서 *</label>
-          <select id="aDept" class="fi">
-            <option value="">부서를 선택하세요</option>
-            <option>물리치료팀</option><option>작업치료팀</option><option>언어치료팀</option>
-            <option>학령기치료팀</option><option>정서행동지원팀</option>
-          </select>
-        </div>
+        <div class="fg"><label class="fl">이름</label><input type="text" id="aName" class="fi" readonly /></div>
+        <div class="fg"><label class="fl">부서</label><input type="text" id="aDept" class="fi" readonly /></div>
         <div id="aMsg" class="fm"></div>
         <button id="aBtn" class="att-btn" onclick="submit()">
           <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
@@ -238,6 +232,7 @@ const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycby8zaIbNuiBMgJC
 const API_URL = window.EDU_CONFIG?.API_URL || DEFAULT_API_URL;
 const courseId = new URLSearchParams(location.search).get('id');
 let courseName = '';
+let currentUser = null;
 
 async function loadCourse() {
   if (!courseId) return;
@@ -274,14 +269,13 @@ async function loadNotices() {
 }
 
 async function submit() {
-  const name = document.getElementById('aName').value.trim();
-  const dept = document.getElementById('aDept').value;
-  if (!name || !dept) { showM('이름과 부서를 입력해 주세요.','err'); return; }
+  const name = currentUser?.name || '';
+  const dept = currentUser?.department || '';
   const btn = document.getElementById('aBtn');
   btn.disabled = true;
   btn.innerHTML = `<svg class="animate-spin" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> 처리 중...`;
   try {
-    const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'checkAttendance',courseId,name,department:dept}) });
+    const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'checkAttendance',courseId}) });
     const d = await r.json();
     if (d.success) {
       document.getElementById('step1').style.display = 'none';
@@ -308,8 +302,16 @@ function showM(msg, type) {
   el.className = 'fm ' + type; el.textContent = msg; el.style.display = 'block';
 }
 
-loadCourse();
-loadNotices();
+async function boot() {
+  currentUser = await EDU_AUTH.requireAuth();
+  if (!currentUser) return;
+  document.getElementById('aName').value = currentUser.name || '';
+  document.getElementById('aDept').value = currentUser.department || '';
+  loadCourse();
+  loadNotices();
+}
+
+boot();
 </script>
 </body>
 </html>

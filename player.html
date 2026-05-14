@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <script src="assets/js/config.js"></script>
+  <script src="assets/js/auth.js"></script>
   <style>
     :root {
       --navy:#0B1F4B; --blue:#1A4FA8; --blue-b:#2563EB; --teal:#0891B2;
@@ -335,11 +336,32 @@ function renderPlaylist() {
   document.getElementById('playlist').innerHTML = html || '<p style="font-size:0.8rem;color:rgba(255,255,255,0.3);">영상 없음</p>';
 }
 
-function goSurvey() { if(surveyUrl) window.open(surveyUrl,'_blank'); else alert('설문 URL이 등록되지 않았습니다.'); }
+async function goSurvey() {
+  if (!surveyUrl) {
+    alert('설문 URL이 등록되지 않았습니다.');
+    return;
+  }
+  try {
+    await fetch(API_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'completeSurvey', courseId })
+    });
+  } catch {
+    // 설문 링크 이동은 네트워크 상태와 분리해서 유지합니다.
+  }
+  window.open(surveyUrl,'_blank');
+}
 function openPdf() { if(materialUrl) window.open(materialUrl,'_blank'); }
 function toggleFs() { const w=document.getElementById('videoWrap'); if(!document.fullscreenElement) w.requestFullscreen?.(); else document.exitFullscreen?.(); }
 
-load();
+async function boot() {
+  const user = await EDU_AUTH.requireAuth();
+  if (!user) return;
+  load();
+}
+
+boot();
 </script>
 </body>
 </html>

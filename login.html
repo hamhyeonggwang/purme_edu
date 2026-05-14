@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>사원 로그인 | 재활치료센터 교육 플랫폼</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <style>
+    body { font-family: 'Noto Sans KR', sans-serif; background:#F0F4F8; color:#0F172A; }
+    h1 { font-family:'Noto Serif KR',serif; }
+    .card { background:#fff; border:1px solid #E2E8F0; border-radius:20px; box-shadow:0 20px 60px rgba(15,23,42,0.08); }
+    .field { width:100%; padding:14px 16px; border:1.5px solid #E2E8F0; border-radius:12px; outline:none; transition:border-color .15s; }
+    .field:focus { border-color:#2563EB; }
+    .msg { display:none; padding:11px 14px; border-radius:10px; font-size:.86rem; }
+    .msg.err { display:block; background:#FEE2E2; color:#DC2626; }
+    .msg.suc { display:block; background:#D1FAE5; color:#059669; }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center px-5">
+  <main class="card w-full max-w-md p-8">
+    <div class="mb-8">
+      <p class="text-xs font-bold tracking-[0.18em] text-blue-700 mb-3">EMPLOYEE LOGIN</p>
+      <h1 class="text-2xl font-bold leading-snug">재활치료센터<br>교육 플랫폼 로그인</h1>
+      <p class="text-sm text-slate-500 mt-3">인증된 사원만 교육 신청, 출석 확인, 강의실을 이용할 수 있습니다.</p>
+    </div>
+
+    <form onsubmit="submitLogin(event)" class="space-y-4">
+      <div>
+        <label for="employeeNo" class="block text-sm font-bold text-slate-700 mb-2">사원번호</label>
+        <input id="employeeNo" class="field" autocomplete="username" inputmode="text" required />
+      </div>
+      <div>
+        <label for="pin" class="block text-sm font-bold text-slate-700 mb-2">PIN</label>
+        <input id="pin" class="field" type="password" autocomplete="current-password" required />
+      </div>
+      <div id="loginMsg" class="msg"></div>
+      <button id="loginBtn" class="w-full rounded-xl bg-blue-700 text-white font-bold py-3.5 hover:bg-blue-800 transition" type="submit">로그인</button>
+    </form>
+
+    <p class="text-xs text-slate-400 mt-6 leading-relaxed">PIN을 잊은 경우 교육 담당자 또는 관리자에게 초기화를 요청하세요.</p>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const returnTo = params.get('returnTo') || 'index.html';
+
+    function showMsg(message, type) {
+      const el = document.getElementById('loginMsg');
+      el.className = 'msg ' + type;
+      el.textContent = message;
+    }
+
+    async function submitLogin(event) {
+      event.preventDefault();
+      const employeeNo = document.getElementById('employeeNo').value.trim();
+      const pin = document.getElementById('pin').value.trim();
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = true;
+      btn.textContent = '로그인 중...';
+
+      try {
+        const result = await EDU_AUTH.login(employeeNo, pin);
+        if (!result.success) {
+          showMsg(result.error || '로그인에 실패했습니다.', 'err');
+          return;
+        }
+        showMsg('로그인되었습니다.', 'suc');
+        location.href = returnTo;
+      } catch {
+        showMsg('네트워크 오류가 발생했습니다.', 'err');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '로그인';
+      }
+    }
+  </script>
+</body>
+</html>

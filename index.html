@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <script src="assets/js/config.js"></script>
+  <script src="assets/js/auth.js"></script>
   <style>
     :root {
       --navy:       #0B1F4B;
@@ -347,11 +348,13 @@
       <span class="cur">교육 목록</span>
     </div>
     <div class="tb-right">
+      <span class="tb-date" id="currentUser">—</span>
       <span class="tb-date" id="tbDate">—</span>
       <a href="admin.html" class="tb-admin">
         <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM6 20v-2a6 6 0 0 1 12 0v2"/></svg>
         관리자
       </a>
+      <button onclick="EDU_AUTH.logout()" class="tb-admin" type="button">로그아웃</button>
     </div>
   </div>
 
@@ -396,25 +399,9 @@
       <p class="m-sub" id="mCourse"></p>
     </div>
     <div class="m-bd">
-      <div class="fg"><label class="fl">이름 *</label><input type="text" id="rName" class="fi" placeholder="홍길동" /></div>
-      <div class="fg">
-        <label class="fl">부서 *</label>
-        <select id="rDept" class="fi">
-          <option value="">부서를 선택하세요</option>
-          <option>물리치료팀</option><option>작업치료팀</option><option>언어치료팀</option>
-          <option>학령기치료팀</option><option>정서행동지원팀</option>
-        </select>
-      </div>
-      <div class="fg">
-        <label class="fl">직군 *</label>
-        <select id="rRole" class="fi">
-          <option value="">직군을 선택하세요</option>
-          <option>작업치료사</option><option>물리치료사</option><option>언어재활사</option>
-          <option>심리사</option><option>사회복지사</option><option>간호사</option>
-          <option>행정직</option><option>기타</option>
-        </select>
-      </div>
-      <div class="fg"><label class="fl">연락처</label><input type="tel" id="rPhone" class="fi" placeholder="010-0000-0000" /></div>
+      <div class="fg"><label class="fl">신청자</label><input type="text" id="rUserName" class="fi" readonly /></div>
+      <div class="fg"><label class="fl">부서</label><input type="text" id="rUserDept" class="fi" readonly /></div>
+      <div class="fg"><label class="fl">직군</label><input type="text" id="rUserRole" class="fi" readonly /></div>
       <div id="rMsg" class="fm"></div>
     </div>
     <div class="m-ft">
@@ -430,6 +417,7 @@
 const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycby8zaIbNuiBMgJCasc3HMSGxYvV9v07SaH4kYaHPJF62ti_MsghiKsdY0QEmG-S7_Cp/exec';
 const API_URL = window.EDU_CONFIG?.API_URL || DEFAULT_API_URL;
 let courses = [], curId = null;
+let currentUser = null;
 
 // Date
 (function(){
@@ -607,8 +595,9 @@ function openModal(id) {
   const c = courses.find(x=>sameId(x['교육ID'], id));
   if(!c) return;
   document.getElementById('mCourse').textContent = c['교육명'];
-  ['rName','rPhone'].forEach(i=>document.getElementById(i).value='');
-  ['rDept','rRole'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('rUserName').value = currentUser?.name || '';
+  document.getElementById('rUserDept').value = currentUser?.department || '';
+  document.getElementById('rUserRole').value = currentUser?.roleName || '';
   const msg = document.getElementById('rMsg'); msg.style.display='none';
   document.getElementById('modal').style.display='flex';
 }
@@ -616,15 +605,10 @@ function closeModal() { document.getElementById('modal').style.display='none'; c
 document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
 
 async function submitReg() {
-  const name=document.getElementById('rName').value.trim();
-  const dept=document.getElementById('rDept').value;
-  const role=document.getElementById('rRole').value;
-  const phone=document.getElementById('rPhone').value.trim();
-  if(!name||!dept||!role){showM('rMsg','이름, 부서, 직군은 필수입니다.','err');return;}
   const btn=document.getElementById('rSubmit');
   btn.disabled=true; btn.textContent='신청 중...';
   try {
-    const res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'registerCourse',courseId:curId,name,department:dept,role,phone})});
+    const res=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'registerCourse',courseId:curId})});
     const data=await res.json();
     if(data.success){showM('rMsg','✅ 신청이 완료되었습니다!','suc');setTimeout(()=>{closeModal();load();toast('신청이 완료되었습니다.');},1300);}
     else showM('rMsg',data.error,'err');
@@ -634,8 +618,15 @@ async function submitReg() {
 function showM(id,msg,type){const el=document.getElementById(id);el.className='fm '+type;el.textContent=msg;el.style.display='block';}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
 
-load();
-loadNotices();
+async function boot() {
+  currentUser = await EDU_AUTH.requireAuth();
+  if (!currentUser) return;
+  document.getElementById('currentUser').textContent = `${currentUser.name}님`;
+  load();
+  loadNotices();
+}
+
+boot();
 </script>
 </body>
 </html>
