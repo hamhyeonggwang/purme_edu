@@ -10,8 +10,12 @@ const SHEETS = {
   ATTENDANCE: '출석',
   SURVEYS: '설문완료',
   COMPLETIONS: '수료현황',
-  NOTICES: '공지사항'
+  NOTICES: '공지사항',
+  EMPLOYEES: '사원명부',
+  SESSIONS: '로그인세션'
 };
+
+const SESSION_TTL_HOURS = 12;
 
 // ============================================================
 // CORS & 라우팅
@@ -29,11 +33,22 @@ function handleRequest(e) {
   output.setMimeType(ContentService.MimeType.JSON);
 
   try {
-    const action = e.parameter.action || (e.postData ? JSON.parse(e.postData.contents).action : null);
-    const params = e.postData ? JSON.parse(e.postData.contents) : e.parameter;
+    const body = e.postData && e.postData.contents ? JSON.parse(e.postData.contents) : null;
+    const params = body || e.parameter || {};
+    const action = params.action || (e.parameter && e.parameter.action);
+    const authResult = authorizeAction(action, params);
+    if (!authResult.success) {
+      output.setContent(JSON.stringify(authResult));
+      return output;
+    }
+    params.auth = authResult.auth || null;
 
     let result;
     switch (action) {
+      case 'login':             result = login(params); break;
+      case 'logout':            result = logout(params); break;
+      case 'getMe':             result = getMe(params); break;
+      case 'changePin':         result = changePin(params); break;
       case 'getCourses':        result = getCourses(params); break;
       case 'getCourseById':     result = getCourseById(params); break;
       case 'registerCourse':    result = registerCourse(params); break;
@@ -52,6 +67,7 @@ function handleRequest(e) {
       case 'deleteCourse':      result = deleteCourse(params); break;
       case 'generateQR':        result = generateQRData(params); break;
       case 'initSheets':        result = initializeSheets(); break;
+      case 'resetEmployeePin':  result = resetEmployeePin(params); break;
       default:
         result = { success: false, error: '알 수 없는 액션입니다.' };
     }
@@ -95,6 +111,14 @@ function initializeSheets() {
     {
       name: SHEETS.NOTICES,
       headers: ['공지ID', '내용', '링크URL', '상태', '생성일']
+    },
+    {
+      name: SHEETS.EMPLOYEES,
+      headers: ['사원번호', '이름', '부서', '직군', '연락처', '권한', '상태', 'PIN Salt', 'PIN Hash', '생성일', '최종로그인']
+    },
+    {
+      name: SHEETS.SESSIONS,
+      headers: ['세션ID', '사원번호', '토큰Hash', '만료일시', '생성일시', '상태']
     }
   ];
 
@@ -151,6 +175,293 @@ function addSampleData(ss) {
       [generateId('N'), '사용 가능한 브라우저 안내', '', '게시', now]
     ].forEach(row => noticeSheet.appendRow(row));
   }
+}
+
+// ============================================================
+// 인증/권한
+// ============================================================
+function getActionRole(action, params) {
+  const publicActions = ['login'];
+  const employeeActions = [
+    'logout', 'getMe', 'changePin',
+    'getCourses', 'getCourseById', 'registerCourse',
+    'checkAttendance', 'completeSurvey', 'getNotices'
+  ];
+  const adminActions = [
+    'getDashboard', 'getRegistrations', 'getAttendance', 'getCompletions',
+    'createNotice', 'updateNotice', 'deleteNotice',
+    'createCourse', 'updateCourse', 'deleteCourse',
+    'generateQR', 'initSheets', 'resetEmployeePin'
+  ];
+
+  if (publicActions.includes(action)) return 'public';
+  if (action === 'getNotices' && isTruthy(params.includeHidden)) return 'admin';
+  if (employeeActions.includes(action)) return 'employee';
+  if (adminActions.includes(action)) return 'admin';
+  return 'employee';
+}
+
+function authorizeAction(action, params) {
+  const role = getActionRole(action, params || {});
+  if (role === 'public') return { success: true };
+
+  const auth = requireAuth(params || {});
+  if (!auth.success) return auth;
+
+  if (role === 'admin' && auth.auth.role !== 'admin') {
+    return { success: false, error: '관리자 권한이 필요합니다.', code: 'FORBIDDEN' };
+  }
+
+  return auth;
+}
+
+function requireAuth(params) {
+  const token = String(params.authToken || params.token || '').trim();
+  if (!token) return { success: false, error: '로그인이 필요합니다.', code: 'UNAUTHORIZED' };
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sessionSheet = ss.getSheetByName(SHEETS.SESSIONS);
+  const employeeSheet = ss.getSheetByName(SHEETS.EMPLOYEES);
+  if (!sessionSheet || !employeeSheet) {
+    return { success: false, error: '인증 시트가 준비되지 않았습니다.', code: 'AUTH_NOT_READY' };
+  }
+
+  const tokenHash = hashText(token);
+  const sessionData = sessionSheet.getDataRange().getValues();
+  const sessionHeaders = sessionData[0] || [];
+  const idx = headerIndex(sessionHeaders);
+  const now = new Date();
+
+  for (let i = 1; i < sessionData.length; i++) {
+    const row = sessionData[i];
+    if (row[idx['토큰Hash']] !== tokenHash || row[idx['상태']] !== '활성') continue;
+
+      const expiresAt = row[idx['만료일시']] instanceof Date ? row[idx['만료일시']] : new Date(row[idx['만료일시']]);
+      if (!expiresAt || expiresAt <= now) {
+        sessionSheet.getRange(i + 1, idx['상태'] + 1).setValue('만료');
+        return { success: false, error: '로그인 시간이 만료되었습니다.', code: 'SESSION_EXPIRED' };
+      }
+
+      const employee = findEmployeeByNo(ss, row[idx['사원번호']]);
+      if (!employee || !isActiveEmployee(employee.data)) {
+        return { success: false, error: '사용할 수 없는 계정입니다.', code: 'ACCOUNT_DISABLED' };
+      }
+
+      return { success: true, auth: toAuthProfile(employee.data) };
+    }
+  }
+
+  return { success: false, error: '유효하지 않은 로그인입니다.', code: 'UNAUTHORIZED' };
+}
+
+function login(params) {
+  const employeeNo = String(params.employeeNo || params.employeeId || '').trim();
+  const pin = String(params.pin || '').trim();
+  if (!employeeNo || !pin) return { success: false, error: '사원번호와 PIN을 입력해 주세요.' };
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const employee = findEmployeeByNo(ss, employeeNo);
+  if (!employee || !isActiveEmployee(employee.data)) {
+    return { success: false, error: '사원번호 또는 PIN이 올바르지 않습니다.' };
+  }
+
+  const storedSalt = String(employee.data['PIN Salt'] || '');
+  const storedHash = String(employee.data['PIN Hash'] || '');
+  if (!storedSalt || !storedHash || hashPin(pin, storedSalt) !== storedHash) {
+    return { success: false, error: '사원번호 또는 PIN이 올바르지 않습니다.' };
+  }
+
+  const token = generateSecureToken();
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + SESSION_TTL_HOURS * 60 * 60 * 1000);
+  const sessionSheet = ensureSheetWithHeaders(ss, SHEETS.SESSIONS, ['세션ID', '사원번호', '토큰Hash', '만료일시', '생성일시', '상태']);
+  sessionSheet.appendRow([generateId('SS'), employeeNo, hashText(token), expiresAt, now, '활성']);
+
+  const lastLoginIdx = employee.headers.indexOf('최종로그인');
+  if (lastLoginIdx >= 0) employee.sheet.getRange(employee.rowIndex, lastLoginIdx + 1).setValue(now);
+
+  return {
+    success: true,
+    token,
+    expiresAt: Utilities.formatDate(expiresAt, 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss'),
+    user: toAuthProfile(employee.data)
+  };
+}
+
+function logout(params) {
+  const token = String(params.authToken || params.token || '').trim();
+  if (!token) return { success: true };
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEETS.SESSIONS);
+  if (!sheet) return { success: true };
+
+  const tokenHash = hashText(token);
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0] || [];
+  const idx = headerIndex(headers);
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][idx['토큰Hash']] === tokenHash) {
+      sheet.getRange(i + 1, idx['상태'] + 1).setValue('로그아웃');
+    }
+  }
+  return { success: true, message: '로그아웃되었습니다.' };
+}
+
+function getMe(params) {
+  return { success: true, user: params.auth };
+}
+
+function changePin(params) {
+  const currentPin = String(params.currentPin || '').trim();
+  const newPin = String(params.newPin || '').trim();
+  if (!currentPin || !newPin) return { success: false, error: '현재 PIN과 새 PIN을 입력해 주세요.' };
+  if (newPin.length < 4) return { success: false, error: 'PIN은 4자리 이상으로 설정해 주세요.' };
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const employee = findEmployeeByNo(ss, params.auth.employeeNo);
+  if (!employee) return { success: false, error: '사원 정보를 찾을 수 없습니다.' };
+
+  if (hashPin(currentPin, employee.data['PIN Salt']) !== employee.data['PIN Hash']) {
+    return { success: false, error: '현재 PIN이 올바르지 않습니다.' };
+  }
+
+  setEmployeePinInternal(employee, newPin);
+  return { success: true, message: 'PIN이 변경되었습니다.' };
+}
+
+function resetEmployeePin(params) {
+  const employeeNo = String(params.employeeNo || '').trim();
+  const newPin = String(params.newPin || '').trim();
+  if (!employeeNo || !newPin) return { success: false, error: '사원번호와 새 PIN을 입력해 주세요.' };
+  if (newPin.length < 4) return { success: false, error: 'PIN은 4자리 이상으로 설정해 주세요.' };
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const employee = findEmployeeByNo(ss, employeeNo);
+  if (!employee) return { success: false, error: '사원 정보를 찾을 수 없습니다.' };
+
+  setEmployeePinInternal(employee, newPin);
+  return { success: true, message: 'PIN이 초기화되었습니다.' };
+}
+
+// Apps Script 편집기에서 초기 계정 PIN을 설정할 때 직접 실행할 수 있습니다.
+function setEmployeePin(employeeNo, newPin) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const employee = findEmployeeByNo(ss, employeeNo);
+  if (!employee) throw new Error('사원 정보를 찾을 수 없습니다.');
+  setEmployeePinInternal(employee, newPin);
+}
+
+// Apps Script 편집기에서 최초 관리자/사원 계정을 만들 때 직접 실행할 수 있습니다.
+function upsertEmployee(employeeNo, name, department, roleName, phone, role, pin) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const headers = ['사원번호', '이름', '부서', '직군', '연락처', '권한', '상태', 'PIN Salt', 'PIN Hash', '생성일', '최종로그인'];
+  const sheet = ensureSheetWithHeaders(ss, SHEETS.EMPLOYEES, headers);
+  const existing = findEmployeeByNo(ss, employeeNo);
+  const now = new Date();
+
+  if (existing) {
+    const updates = {
+      '이름': name,
+      '부서': department,
+      '직군': roleName,
+      '연락처': phone,
+      '권한': role || 'employee',
+      '상태': '활성'
+    };
+    Object.keys(updates).forEach(header => {
+      const colIdx = existing.headers.indexOf(header);
+      if (colIdx >= 0) existing.sheet.getRange(existing.rowIndex, colIdx + 1).setValue(updates[header]);
+    });
+    if (pin) setEmployeePinInternal(existing, pin);
+    return;
+  }
+
+  sheet.appendRow([employeeNo, name, department, roleName, phone, role || 'employee', '활성', '', '', now, '']);
+  if (pin) {
+    const created = findEmployeeByNo(ss, employeeNo);
+    setEmployeePinInternal(created, pin);
+  }
+}
+
+function setEmployeePinInternal(employee, newPin) {
+  const salt = generateSecureToken();
+  const pinHash = hashPin(newPin, salt);
+  const saltIdx = employee.headers.indexOf('PIN Salt');
+  const hashIdx = employee.headers.indexOf('PIN Hash');
+  if (saltIdx < 0 || hashIdx < 0) throw new Error('PIN 컬럼이 없습니다.');
+  employee.sheet.getRange(employee.rowIndex, saltIdx + 1).setValue(salt);
+  employee.sheet.getRange(employee.rowIndex, hashIdx + 1).setValue(pinHash);
+}
+
+function findEmployeeByNo(ss, employeeNo) {
+  const sheet = ss.getSheetByName(SHEETS.EMPLOYEES);
+  if (!sheet) return null;
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return null;
+  const headers = data[0];
+  const idx = headerIndex(headers);
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][idx['사원번호']] || '').trim() === String(employeeNo || '').trim()) {
+      const obj = {};
+      headers.forEach((h, col) => obj[h] = data[i][col]);
+      return { sheet, headers, rowIndex: i + 1, data: obj };
+    }
+  }
+  return null;
+}
+
+function toAuthProfile(employee) {
+  return {
+    employeeNo: String(employee['사원번호'] || ''),
+    name: String(employee['이름'] || ''),
+    department: String(employee['부서'] || ''),
+    roleName: String(employee['직군'] || ''),
+    phone: String(employee['연락처'] || ''),
+    role: String(employee['권한'] || 'employee').trim() === 'admin' ? 'admin' : 'employee'
+  };
+}
+
+function isActiveEmployee(employee) {
+  const status = String(employee['상태'] || '활성').trim();
+  return !['비활성', '퇴사', '중지', '삭제'].includes(status);
+}
+
+function ensureSheetWithHeaders(ss, name, headers) {
+  let sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+    sheet.appendRow(headers);
+    sheet.getRange(1, 1, 1, headers.length)
+      .setBackground('#1a5276')
+      .setFontColor('#ffffff')
+      .setFontWeight('bold');
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function headerIndex(headers) {
+  const idx = {};
+  headers.forEach((h, i) => idx[h] = i);
+  return idx;
+}
+
+function hashPin(pin, salt) {
+  return hashText(`${salt}:${pin}`);
+}
+
+function hashText(text) {
+  const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(text), Utilities.Charset.UTF_8);
+  return Utilities.base64EncodeWebSafe(digest);
+}
+
+function generateSecureToken() {
+  return `${Utilities.getUuid()}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
+
+function isTruthy(value) {
+  return value === true || value === 1 || ['1', 'true', 'yes', 'Y'].includes(String(value || '').trim());
 }
 
 // ============================================================
@@ -290,6 +601,7 @@ function deleteCourse(params) {
 // ============================================================
 function registerCourse(params) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const user = params.auth;
 
   // 정원 체크
   const courseSheet = ss.getSheetByName(SHEETS.COURSES);
@@ -318,7 +630,7 @@ function registerCourse(params) {
   const regData = regSheet.getDataRange().getValues();
 
   for (let i = 1; i < regData.length; i++) {
-    if (isSameId(regData[i][1], params.courseId) && regData[i][2] === params.name && regData[i][7] !== '취소') {
+    if (isSameId(regData[i][1], params.courseId) && regData[i][2] === user.name && regData[i][7] !== '취소') {
       return { success: false, error: '이미 신청하셨습니다.' };
     }
   }
@@ -326,7 +638,7 @@ function registerCourse(params) {
   // 신청 저장
   const regId = generateId('R');
   const now = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss');
-  regSheet.appendRow([regId, params.courseId, params.name, params.department, params.role, params.phone, now, '신청완료']);
+  regSheet.appendRow([regId, params.courseId, user.name, user.department, user.roleName, user.phone, now, '신청완료']);
 
   // 신청수 업데이트
   courseSheet.getRange(courseRow + 1, registeredIdx + 1).setValue(registered + 1);
@@ -357,6 +669,7 @@ function getRegistrations(params) {
 // ============================================================
 function checkAttendance(params) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const user = params.auth;
 
   // 출석 가능 시간 체크
   const courseResult = getCourseById(params);
@@ -379,7 +692,7 @@ function checkAttendance(params) {
   const attData = attSheet.getDataRange().getValues();
 
   for (let i = 1; i < attData.length; i++) {
-    if (isSameId(attData[i][1], params.courseId) && attData[i][2] === params.name) {
+    if (isSameId(attData[i][1], params.courseId) && attData[i][2] === user.name) {
       return { success: false, error: '이미 출석하셨습니다.' };
     }
   }
@@ -387,12 +700,12 @@ function checkAttendance(params) {
   // 출석 저장
   const attId = generateId('A');
   const timeStr = Utilities.formatDate(now, 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss');
-  attSheet.appendRow([attId, params.courseId, params.name, params.department, timeStr, '참가자 확인']);
+  attSheet.appendRow([attId, params.courseId, user.name, user.department, timeStr, '참가자 확인']);
 
   // 수료 체크
-  checkCompletion(params.courseId, params.name, ss);
+  checkCompletion(params.courseId, user.name, ss);
 
-  return { success: true, message: '출석이 완료되었습니다.', time: timeStr };
+  return { success: true, message: '출석이 완료되었습니다.', time: timeStr, user };
 }
 
 function getAttendanceList(params) {
@@ -418,23 +731,24 @@ function getAttendanceList(params) {
 // ============================================================
 function completeSurvey(params) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const user = params.auth;
 
   // 중복 체크
   const surveySheet = ss.getSheetByName(SHEETS.SURVEYS);
   const surveyData = surveySheet.getDataRange().getValues();
 
   for (let i = 1; i < surveyData.length; i++) {
-    if (isSameId(surveyData[i][1], params.courseId) && surveyData[i][2] === params.name) {
+    if (isSameId(surveyData[i][1], params.courseId) && surveyData[i][2] === user.name) {
       return { success: false, error: '이미 설문을 완료하셨습니다.' };
     }
   }
 
   const surveyId = generateId('S');
   const now = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss');
-  surveySheet.appendRow([surveyId, params.courseId, params.name, params.department, now]);
+  surveySheet.appendRow([surveyId, params.courseId, user.name, user.department, now]);
 
   // 수료 체크
-  checkCompletion(params.courseId, params.name, ss);
+  checkCompletion(params.courseId, user.name, ss);
 
   return { success: true, message: '설문 완료가 기록되었습니다.' };
 }
