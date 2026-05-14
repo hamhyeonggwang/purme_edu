@@ -21,6 +21,8 @@
     }
     * { -webkit-font-smoothing: antialiased; }
     body { font-family: 'Noto Sans KR', sans-serif; background: var(--gray-bg); color: #0F172A; }
+    body.admin-locked { visibility: hidden; }
+    body.admin-ready { visibility: visible; }
     h1,h2,h3 { font-family: 'Noto Serif KR', serif; }
     .sidebar { width: 240px; min-height: 100vh; background: #0F172A; }
     .sidebar-link { display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-radius: 10px; color: #94A3B8; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.15s; }
@@ -61,7 +63,7 @@
     }
   </style>
 </head>
-<body class="flex">
+<body class="flex admin-locked">
 
 <!-- Sidebar (desktop) -->
 <aside class="sidebar hidden md:flex flex-col p-4 sticky top-0">
@@ -864,6 +866,8 @@ async function boot() {
   const user = await EDU_AUTH.requireAuth({ admin: true });
   if (!user) return;
   document.getElementById('adminUser').textContent = `${user.name}님 관리자 계정`;
+  document.body.classList.remove('admin-locked');
+  document.body.classList.add('admin-ready');
   loadDashboard();
 }
 

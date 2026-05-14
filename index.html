@@ -350,7 +350,7 @@
     <div class="tb-right">
       <span class="tb-date" id="currentUser">—</span>
       <span class="tb-date" id="tbDate">—</span>
-      <a href="admin.html" class="tb-admin">
+      <a href="admin.html" class="tb-admin" id="adminLink">
         <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM6 20v-2a6 6 0 0 1 12 0v2"/></svg>
         관리자
       </a>
@@ -622,6 +622,7 @@ async function boot() {
   currentUser = await EDU_AUTH.requireAuth();
   if (!currentUser) return;
   document.getElementById('currentUser').textContent = `${currentUser.name}님`;
+  if (currentUser.role !== 'admin') document.getElementById('adminLink').style.display = 'none';
   load();
   loadNotices();
 }

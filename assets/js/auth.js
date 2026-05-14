@@ -123,7 +123,8 @@
       return null;
     }
 
-    const res = await authFetch(`${apiUrl()}?action=getMe`);
+    const requiredRole = options.admin ? '&requiredRole=admin' : '';
+    const res = await authFetch(`${apiUrl()}?action=getMe${requiredRole}`);
     const data = await res.json();
     if (!data.success) {
       clearSession();

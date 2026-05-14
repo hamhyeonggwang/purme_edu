@@ -196,6 +196,7 @@ function getActionRole(action, params) {
 
   if (publicActions.includes(action)) return 'public';
   if (action === 'getNotices' && isTruthy(params.includeHidden)) return 'admin';
+  if (action === 'getMe' && String(params.requiredRole || '').trim() === 'admin') return 'admin';
   if (employeeActions.includes(action)) return 'employee';
   if (adminActions.includes(action)) return 'admin';
   return 'employee';
